@@ -4,8 +4,8 @@
   "description": "Backend server to connect founders and investors checking a specific criteria",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon ./index.js --exec babel-node -e js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "nodemon ./index.js --exec babel-node -e ./index.js",
+    "test": "mocha --require @babel/register --exit"
   },
   "repository": {
     "type": "git",
@@ -24,9 +24,14 @@
   },
   "homepage": "https://github.com/morenocantoj/foundernest-api#readme",
   "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-preset-env": "^1.7.0",
-    "babel-preset-stage-0": "^6.24.1"
+    "@babel/cli": "^7.2.3",
+    "@babel/core": "^7.2.2",
+    "@babel/node": "^7.2.2",
+    "@babel/preset-env": "^7.3.1",
+    "@babel/register": "^7.0.0",
+    "assert": "^1.4.1",
+    "mocha": "^5.2.0",
+    "supertest": "^3.4.2"
   },
   "dependencies": {
     "express": "^4.16.4"
