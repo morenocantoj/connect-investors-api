@@ -1,0 +1,4 @@
+type Query {
+  # Hello World Query in GraphQL
+  helloGraphQL: String
+}
