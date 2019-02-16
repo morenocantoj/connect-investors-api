@@ -1,7 +1,12 @@
 import app from '../index'
 
-const supertest = require('supertest');
-const assert = require('assert');
+import supertest from 'supertest';
+import assert from 'assert';
+
+// Collections
+import { Criterias } from '../data/db'
+
+// URLs
 const api_url = '/'
 const graphql_url = '/graphql'
 
@@ -32,6 +37,49 @@ describe("Foundernest API test suite", () => {
       chk(err, done)
       assert.equal(resp.body.data.helloGraphQL, 'Hello World!')
       done()
+    })
+  })
+  it("Create a new Criteria object", async () => {
+    const newCriteria = new Criterias({
+      text: "CEO full-time",
+      key: "CEO_FULL_TIME",
+      icon: "car"
+    })
+    newCriteria.id = newCriteria._id
+
+    // Create and retrieve the new criteria
+    const createdCriteria = await newCriteria.save()
+    const savedCriteria = await Criterias.findById(createdCriteria.id)
+
+    assert.equal(savedCriteria.text, 'CEO full-time')
+    assert.equal(savedCriteria.key, 'CEO_FULL_TIME')
+
+  })
+  it("Create a new Criteria object without async/await", () => {
+    const newCriteria = new Criterias({
+      text: "CEO full-time",
+      key: "CEO_FULL_TIME",
+      icon: "car"
+    })
+    newCriteria.id = newCriteria._id
+
+    // Create a new criteria
+    return new Promise((resolve, reject) => {
+      newCriteria.save((error) => {
+        if (error) reject(error)
+        else resolve(newCriteria)
+      })
+    }).then((newCriteria) => {
+      // Check if criteria has been created
+      return new Promise((resolve, reject) => {
+        Criterias.findById(newCriteria.id, (error, criteria) => {
+          if (error) reject(error)
+          else resolve(criteria)
+        })
+      }).then((criteria) => {
+        assert.equal(criteria.text, 'CEO full-time')
+        assert.equal(criteria.key, 'CEO_FULL_TIME')
+      })
     })
   })
 })
