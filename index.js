@@ -7,14 +7,12 @@ import { resolvers } from './data/resolvers'
 
 const app = express()
 const server = new ApolloServer({typeDefs, resolvers})
+const port = 4000
 
 server.applyMiddleware({app})
 
-// Main route
-app.get('/', (req, res) => {
-  res.send('Deprecated...')
+app.listen({port}, () => {
+  console.log("Server running..." )
 })
-
-app.listen({port: 4000}, () => console.log("Server running... http://localhost:4000" + server.graphqlPath))
 
 export default app

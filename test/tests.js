@@ -13,10 +13,10 @@ function chk(err, done) {
 }
 
 describe("Foundernest API test suite", () => {
-  it("Initial test", (done) => {
+  it("Initial test (deleted deprecated route)", (done) => {
     supertest(app)
     .get(api_url)
-    .expect(200, done)
+    .expect(404, done)
   })
   it("GraphQL initial test", (done) => {
     supertest(app)
