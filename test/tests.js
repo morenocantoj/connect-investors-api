@@ -16,6 +16,12 @@ function chk(err, done) {
     done()
   }
 }
+// Check error for async testing
+function chk_a(err) {
+  if (err) {
+    console.log(err)
+  }
+}
 
 describe("Foundernest API test suite", () => {
   it("Initial test (deleted deprecated route)", (done) => {
@@ -80,6 +86,36 @@ describe("Foundernest API test suite", () => {
         assert.equal(criteria.text, 'CEO full-time')
         assert.equal(criteria.key, 'CEO_FULL_TIME')
       })
+    })
+  })
+  it("Create a new Criteria with Mutation", (done) => {
+    supertest(app)
+    .post(graphql_url)
+    .send({
+      query: `mutation createCriteria($input: CriteriaInput) {
+        createCriteria(input: $input) {
+          id
+          text
+          key
+          icon
+        }
+      }`,
+      variables: {
+        "input": {
+          "text": "CTO full-time",
+          "key": "CTO_FULL_TIME",
+          "icon": "cloud"
+        }
+      }
+    })
+    .set('Content-Type', 'application/json')
+    .expect(200)
+    .end((err, resp) => {
+      chk_a(err, done)
+      assert(resp.body.data.createCriteria.text, "CTO full-time")
+      assert(resp.body.data.createCriteria.key, "CTO_FULL_TIME")
+      assert(resp.body.data.createCriteria.icon, "cloud")
+      done()
     })
   })
 })

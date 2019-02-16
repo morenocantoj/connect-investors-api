@@ -14,3 +14,8 @@ input CriteriaInput {
   key: String!
   icon: String
 }
+type Mutation {
+  # Criteria mutations
+  """ Create a new criteria """
+  createCriteria(input: CriteriaInput): Criteria
+}
