@@ -118,4 +118,52 @@ describe("Foundernest API test suite", () => {
       done()
     })
   })
+  it("Get all criterias", (done) => {
+    supertest(app)
+    .post(graphql_url)
+    .send({
+      query: `{
+        getCriterias{
+          id
+          text
+        }
+      }`,
+    })
+    .set('Content-Type', 'application/json')
+    .expect(200)
+    .end((err, resp) => {
+      chk(err, done)
+      assert.notEqual(resp.body.data.getCriterias, undefined)
+      assert.notEqual(resp.body.data.getCriterias.length, 0)
+      assert.notEqual(resp.body.data.getCriterias.length, null)
+      done()
+    })
+  })
+  it("Get all criterias with limit and offset", (done) => {
+    supertest(app)
+    .post(graphql_url)
+    .send({
+      query:
+      `query getCriterias($limit: Int, $offset: Int){
+        getCriterias(limit: $limit, offset: $offset){
+          id
+          text
+        }
+      }`,
+      variables: {
+        "limit": 2,
+        "offset": 1
+      }
+    })
+    .set('Content-Type', 'application/json')
+    .expect(200)
+    .end((err, resp) => {
+      chk(err, done)
+      assert.notEqual(resp.body.data.getCriterias, undefined)
+      assert.notEqual(resp.body.data.getCriterias.length, 0)
+      assert.notEqual(resp.body.data.getCriterias.length, null)
+      assert(resp.body.data.getCriterias.length, 2)
+      done()
+    })
+  })
 })

@@ -5,6 +5,14 @@ export const resolvers = {
   Query: {
     helloGraphQL: (root) => {
       return "Hello World!"
+    },
+    getCriterias: async (root, {limit, offset}) => {
+      let err, criterias
+      [err, criterias] = await to(Criterias.find({}).limit(limit).skip(offset))
+
+      if (err) return new Error('Error ocurred while retrieving criterias!')
+
+      return (criterias)
     }
   },
   Mutation: {

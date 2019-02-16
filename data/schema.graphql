@@ -7,6 +7,9 @@ type Criteria {
 type Query {
   # Hello World Query in GraphQL
   helloGraphQL: String
+  # Criteria queries
+  """ Get criterias """
+  getCriterias(limit: Int, offset: Int): [Criteria]
 }
 input CriteriaInput {
   id: ID
