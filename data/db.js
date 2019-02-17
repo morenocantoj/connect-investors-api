@@ -14,4 +14,14 @@ const criteriaSchema = new mongoose.Schema({
 
 const Criterias = mongoose.model('criterias', criteriaSchema)
 
-export { Criterias }
+// User Schema
+const userSchema = new mongoose.Schema({
+  name: String,
+  email: String,
+  password: String,
+  role: String
+})
+
+const Users = mongoose.model('users', userSchema)
+
+export { Criterias, Users }
