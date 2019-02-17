@@ -4,6 +4,16 @@ type Criteria {
   key: String
   icon: String
 }
+type User {
+  id: ID
+  name: String
+  email: String
+  password: String
+  role: UserRole
+}
+enum UserRole {
+  ADMIN
+}
 type Query {
   # Hello World Query in GraphQL
   helloGraphQL: String
@@ -17,8 +27,18 @@ input CriteriaInput {
   key: String!
   icon: String
 }
+input UserInput {
+  id: ID
+  name: String!
+  email: String!
+  password: String!
+  role: UserRole!
+}
 type Mutation {
   # Criteria mutations
   """ Create a new criteria """
   createCriteria(input: CriteriaInput): Criteria
+  # User mutations
+  createUser(input: UserInput): User
+  authenticateUser(email: String!, password: String!): Boolean
 }

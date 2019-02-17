@@ -1,5 +1,6 @@
-import { Criterias } from './db'
+import { Criterias, Users } from './db'
 import to from 'await-to-js'
+import bcrypt from 'bcrypt'
 
 export const resolvers = {
   Query: {
@@ -16,6 +17,7 @@ export const resolvers = {
     }
   },
   Mutation: {
+    // Criteria mutations
     createCriteria: async (root, {input}) => {
       const newCriteria = new Criterias({
         text: input.text,
@@ -32,6 +34,48 @@ export const resolvers = {
       if (err) return new Error('Error ocurred while saving criteria!')
 
       return (savedCriteria)
+    },
+    // User mutations
+    createUser: async (root, {input}) => {
+      // Check if user already exists in database
+      let err, existingUser
+      [err, existingUser] = await to(Users.findOne({email: input.email}))
+
+      if (err) return new Error('Error ocurred while checking if user already exists')
+      // If an object is returned, it means we have already an existing user
+      if (existingUser) return new Error('User already exists in database')
+
+      // Create the new user and save it
+      const newUser = new Users({
+        name: input.name,
+        email: input.email,
+        password: input.password,
+        role: input.role
+      })
+
+      let savedUser
+      [err, savedUser] = await to(newUser.save())
+
+      if (err) return new Error('Error ocurred while saving new user')
+      return (savedUser)
+    },
+    authenticateUser: async (root, {email, password}) => {
+      // Check if user exists in database
+      let err, user
+
+      [err, user] = await to(Users.findOne({email: email}))
+      if(err) throw new Error('Error ocurred while checking if user exists')
+      if (!user) throw new Error('User does not exist')
+
+      // Check if both passwords match
+      let correctPassword
+
+      [err, correctPassword] = await to(bcrypt.compare(password, user.password))
+      if (err) throw new Error('Error while checking if passwords match')
+      if (!correctPassword) return false
+
+      // Passwords match!
+      return true
     }
   }
 }
