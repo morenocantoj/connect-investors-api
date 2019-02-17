@@ -2,6 +2,19 @@ import { Criterias, Users } from './db'
 import to from 'await-to-js'
 import bcrypt from 'bcrypt'
 
+// JWT
+import dotenv from 'dotenv'
+dotenv.config({path: './.env'})
+
+import jwt from 'jsonwebtoken'
+
+const createToken = (loginUser, secret, expiresIn) => {
+  // Get unique email and role from user login
+  const {email, role} = loginUser
+
+  return jwt.sign({email, role}, secret, {expiresIn})
+}
+
 export const resolvers = {
   Query: {
     helloGraphQL: (root) => {
@@ -14,6 +27,14 @@ export const resolvers = {
       if (err) return new Error('Error ocurred while retrieving criterias!')
 
       return (criterias)
+    },
+    obtainUser: async (root, args, {actualUser}) => {
+      if (!actualUser) return null
+
+      // Obtain actual user logged
+      const user = await Users.findOne({email: actualUser.email})
+
+      return (user)
     }
   },
   Mutation: {
@@ -72,10 +93,12 @@ export const resolvers = {
 
       [err, correctPassword] = await to(bcrypt.compare(password, user.password))
       if (err) throw new Error('Error while checking if passwords match')
-      if (!correctPassword) return false
+      if (!correctPassword) throw new Error('Incorrect password')
 
       // Passwords match!
-      return true
+      return {
+        token: createToken(user, process.env.SECRET, '1hr')
+      }
     }
   }
 }

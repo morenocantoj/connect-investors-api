@@ -6,6 +6,9 @@ import assert from 'assert';
 // Collections
 import { Criterias, Users } from '../data/db'
 
+// Faker mock
+import faker from 'faker'
+
 // URLs
 const api_url = '/'
 const graphql_url = '/graphql'
@@ -185,6 +188,85 @@ describe("Foundernest API test suite", () => {
       assert(createdRyan.email, ryan.email)
       assert(createdRyan.password, ryan.password)
       assert(createdRyan.role, ryan.role)
+    })
+    it('Mutation to create a new user', (done) => {
+      const name = faker.name.findName()
+      const email = faker.internet.email()
+      const password = faker.internet.password()
+
+      supertest(app)
+      .post(graphql_url)
+      .send({
+        query: `mutation createUser($input: UserInput!) {
+          createUser(input: $input) {
+            name
+            email
+            role
+          }
+        }`,
+        variables: {
+          "input": {
+            "name": name,
+            "email": email,
+            "password": password,
+            "role": "ADMIN"
+          }
+        }
+      })
+      .set('Content-Type', 'application/json')
+      .expect(200)
+      .end((err, resp) => {
+        chk(err, done)
+        assert(resp.body.data.createUser.name, "John Doe")
+        assert(resp.body.data.createUser.email, "john.doe@example.com")
+        assert(resp.body.data.createUser.role, "ADMIN")
+        done()
+      })
+    })
+    it('Mutation to login an existing user', (done) => {
+      supertest(app)
+      .post(graphql_url)
+      .send({
+        query:
+          `mutation authenticateUser($email: String!, $password: String!) {
+              authenticateUser(email: $email, password: $password) {
+                token
+              }
+            }`,
+        variables: {
+          "email": "private.ryan@example.com",
+          "password": "plainexample"
+        }
+      })
+      .set('Content-Type', 'application/json')
+      .expect(200)
+      .end((err, resp) => {
+        chk(err, done)
+        assert.notEqual(resp.body.data.authenticateUser.token, undefined)
+        done()
+      })
+    })
+    it('Mutation to login an existing user wrong password', (done) => {
+      supertest(app)
+      .post(graphql_url)
+      .send({
+        query:
+          `mutation authenticateUser($email: String!, $password: String!) {
+              authenticateUser(email: $email, password: $password) {
+                token
+              }
+            }`,
+        variables: {
+          "email": "private.ryan@example.com",
+          "password": "WE_MISSED_PRIVATE_RYAN"
+        }
+      })
+      .set('Content-Type', 'application/json')
+      .end((err, resp) => {
+        chk(err, done)
+        assert.equal(resp.body.errors[0].message, 'Incorrect password')
+        done()
+      })
     })
   })
 })

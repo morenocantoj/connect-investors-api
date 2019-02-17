@@ -8,8 +8,10 @@ type User {
   id: ID
   name: String
   email: String
-  password: String
   role: UserRole
+}
+type Token {
+  token: String
 }
 enum UserRole {
   ADMIN
@@ -20,6 +22,8 @@ type Query {
   # Criteria queries
   """ Get criterias """
   getCriterias(limit: Int, offset: Int): [Criteria]
+  # User queries
+  obtainUser: User
 }
 input CriteriaInput {
   id: ID
@@ -40,5 +44,5 @@ type Mutation {
   createCriteria(input: CriteriaInput): Criteria
   # User mutations
   createUser(input: UserInput): User
-  authenticateUser(email: String!, password: String!): Boolean
+  authenticateUser(email: String!, password: String!): Token
 }
