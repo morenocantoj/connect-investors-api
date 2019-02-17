@@ -15,6 +15,7 @@ type Token {
 }
 enum UserRole {
   ADMIN
+  INVESTOR
 }
 type Query {
   # Hello World Query in GraphQL
@@ -43,6 +44,6 @@ type Mutation {
   """ Create a new criteria """
   createCriteria(input: CriteriaInput): Criteria
   # User mutations
-  createUser(input: UserInput): User
+  createUserAdmin(input: UserInput): User
   authenticateUser(email: String!, password: String!): Token
 }

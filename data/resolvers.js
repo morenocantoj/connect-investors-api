@@ -57,7 +57,10 @@ export const resolvers = {
       return (savedCriteria)
     },
     // User mutations
-    createUser: async (root, {input}) => {
+    createUserAdmin: async (root, {input}, {actualUser}) => {
+      // Check permissions
+      if (!actualUser || actualUser.role !== "ADMIN") throw new Error("You are not allowed to do this")
+
       // Check if user already exists in database
       let err, existingUser
       [err, existingUser] = await to(Users.findOne({email: input.email}))
