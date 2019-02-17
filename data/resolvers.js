@@ -39,7 +39,10 @@ export const resolvers = {
   },
   Mutation: {
     // Criteria mutations
-    createCriteria: async (root, {input}) => {
+    createCriteria: async (root, {input}, {actualUser}) => {
+      // You can create a criteria if you are an admin or an investor
+      if (!actualUser) throw new Error("You're not logged in!")
+
       const newCriteria = new Criterias({
         text: input.text,
         icon: input.icon,
