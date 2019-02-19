@@ -9,7 +9,7 @@ import dotenv from 'dotenv'
 dotenv.config({path: './.env'})
 
 // Collections
-import { Criterias, Users } from '../data/db'
+import { Criterias, Users, Companies } from '../data/db'
 
 // Faker mock
 import faker from 'faker'
@@ -314,6 +314,112 @@ describe("Foundernest API test suite", () => {
         assert.notEqual(resp.body.data.getCriterias.length, null)
         assert(resp.body.data.getCriterias.length, 2)
         done()
+      })
+    })
+  })
+  describe("/** -- Company Tests -- **/", () => {
+    it("Create a Company model", async () => {
+      const newCompany = new Companies({
+        name: faker.company.companyName(),
+        ceo_name: faker.name.findName(),
+        url: faker.internet.url(),
+        email: faker.internet.email(),
+        telephone: faker.phone.phoneNumberFormat()
+      })
+      newCompany.id = newCompany._id
+
+      const createdCompany = await newCompany.save()
+      const savedCompany = await Companies.findById(createdCompany.id)
+
+      assert.equal(savedCompany.name, createdCompany.name)
+      assert.equal(savedCompany.ceo_name, createdCompany.ceo_name)
+      assert.equal(savedCompany.url, createdCompany.url)
+      assert.equal(savedCompany.email, createdCompany.email)
+      assert.equal(savedCompany.telephone, createdCompany.telephone)
+    })
+    it("Create a Company with Mutation", (done) => {
+      supertest(app)
+      .post(graphql_url)
+      .send({
+        query:
+          `mutation createCompany($input: CompanyInput) {
+            createCompany(input: $input) {
+              name
+              ceo_name
+              telephone
+              email
+              id
+            }
+          }
+          `,
+        variables: {
+          "input": {
+            "name": "Charmeleon",
+            "ceo_name": "Arancha Ferrero",
+            "url": "www.charmeleon.com",
+            "email": "charmeleon@startup.com",
+            "telephone": "+34 599 844 233"
+          }
+        }
+      })
+      .set('Content-Type', 'application/json')
+      .end((err, resp) => {
+        chk(err, done)
+        assert.equal(resp.body.data.createCompany.name, "Charmeleon")
+        assert.equal(resp.body.data.createCompany.ceo_name, "Arancha Ferrero")
+        assert.equal(resp.body.data.createCompany.telephone, "+34 599 844 233")
+        assert.equal(resp.body.data.createCompany.email, "www.charmeleon.com")
+        done()
+      })
+    })
+    it("Delete a Company with Mutation", (done) => {
+      supertest(app)
+      .post(graphql_url)
+      .send({
+        query:
+          `mutation createCompany($input: CompanyInput) {
+            createCompany(input: $input) {
+              name
+              ceo_name
+              telephone
+              email
+              id
+            }
+          }
+          `,
+        variables: {
+          "input": {
+            "name": "Charmeleon",
+            "ceo_name": "Arancha Ferrero",
+            "url": "www.charmeleon.com",
+            "email": "charmeleon@startup.com",
+            "telephone": "+34 599 844 233"
+          }
+        }
+      })
+      .set('Content-Type', 'application/json')
+      .end((err, resp) => {
+        chk(err, done)
+
+        const companyId = resp.body.data.createCompany.id
+        // Real test
+        supertest(app)
+        .post(graphql_url)
+        .send({
+          query:
+            `mutation deleteCompany($id: ID!) {
+              deleteCompany(id: $id)
+            }`,
+          variables: {
+            "id": companyId
+          }
+        })
+        .set('Content-Type', 'application/json')
+        .end((err, resp) => {
+          chk(err, done)
+          assert.equal(resp.body.data.deleteCompany, true)
+          done()
+        })
       })
     })
   })

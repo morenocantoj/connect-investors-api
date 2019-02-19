@@ -1,4 +1,4 @@
-import { Criterias, Users } from './db'
+import { Criterias, Users, Companies } from './db'
 import to from 'await-to-js'
 import bcrypt from 'bcrypt'
 
@@ -105,6 +105,29 @@ export const resolvers = {
       return {
         token: createToken(user, process.env.SECRET, '1hr')
       }
+    },
+    createCompany: async(root, {input}) => {
+      const newCompany = new Companies({
+        name: input.name,
+        ceo_name: input.ceo_name,
+        url: input.url,
+        email: input.url,
+        telephone: input.telephone
+      })
+      newCompany.id = newCompany._id
+
+      let err, savedCompany
+
+      [err, savedCompany] = await to(newCompany.save())
+      if (err) throw new Error('Error ocurred while creating a new company')
+
+      return savedCompany
+    },
+    deleteCompany: async(root, {id}) => {
+      const err = await Companies.findOneAndDelete({id: id})
+      if (err) throw new Error('Error deleting company')
+
+      return true
     }
   }
 }

@@ -10,6 +10,14 @@ type User {
   email: String
   role: UserRole
 }
+type Company {
+  id: ID
+  name: String
+  ceo_name: String
+  url: String
+  email: String
+  telephone: String
+}
 type Token {
   token: String
 }
@@ -39,6 +47,14 @@ input UserInput {
   password: String!
   role: UserRole!
 }
+input CompanyInput {
+  id: ID
+  name: String!
+  ceo_name: String!
+  url: String!
+  email: String!
+  telephone: String!
+}
 type Mutation {
   # Criteria mutations
   """ Create a new criteria """
@@ -46,4 +62,7 @@ type Mutation {
   # User mutations
   createUserAdmin(input: UserInput): User
   authenticateUser(email: String!, password: String!): Token
+  # Company mutations
+  createCompany(input: CompanyInput): Company
+  deleteCompany(id: ID!): Boolean
 }
