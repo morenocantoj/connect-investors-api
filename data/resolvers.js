@@ -105,6 +105,23 @@ export const resolvers = {
       return {
         token: createToken(user, process.env.SECRET, '1hr')
       }
+    },
+    createCompany: async(root, {input}) => {
+      const newCompany = new Companies({
+        name: input.name,
+        ceo_name: input.ceo_name,
+        url: input.url,
+        email: input.url,
+        telephone: input.telephone
+      })
+      newCompany.id = newCompany._id
+
+      let err, savedCompany
+
+      [err, savedCompany] = await to(newCompany.save())
+      if (err) throw new Error('Error ocurred while creating a new company')
+
+      return savedCompany
     }
   }
 }

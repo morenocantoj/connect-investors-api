@@ -337,5 +337,40 @@ describe("Foundernest API test suite", () => {
       assert.equal(savedCompany.email, createdCompany.email)
       assert.equal(savedCompany.telephone, createdCompany.telephone)
     })
+    it("Create a Company with Mutation", (done) => {
+      supertest(app)
+      .post(graphql_url)
+      .send({
+        query:
+          `mutation createCompany($input: CompanyInput) {
+            createCompany(input: $input) {
+              name
+              ceo_name
+              telephone
+              email
+              id
+            }
+          }
+          `,
+        variables: {
+          "input": {
+            "name": "Charmeleon",
+            "ceo_name": "Arancha Ferrero",
+            "url": "www.charmeleon.com",
+            "email": "charmeleon@startup.com",
+            "telephone": "+34 599 844 233"
+          }
+        }
+      })
+      .set('Content-Type', 'application/json')
+      .end((err, resp) => {
+        chk(err, done)
+        assert.equal(resp.body.data.createCompany.name, "Charmeleon")
+        assert.equal(resp.body.data.createCompany.ceo_name, "Arancha Ferrero")
+        assert.equal(resp.body.data.createCompany.telephone, "+34 599 844 233")
+        assert.equal(resp.body.data.createCompany.email, "www.charmeleon.com")
+        done()
+      })
+    })
   })
 })
