@@ -1,9 +1,12 @@
 import mongoose from 'mongoose'
 import bcrypt from 'bcrypt'
+import dotenv from 'dotenv'
+
+dotenv.config({path: './.env'})
 
 mongoose.Promise = global.Promise
 
-mongoose.connect('mongodb://localhost/foundernest', {useNewUrlParser: true})
+mongoose.connect(String(process.env.DATABASE_URL), {useNewUrlParser: true})
 mongoose.set('setAndModify', false)
 
 // Criteria Schema
