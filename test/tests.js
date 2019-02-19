@@ -35,14 +35,21 @@ function chk_a(err) {
 let tokenAdmin
 
 describe("Foundernest API test suite", () => {
-  before((done) => {
+  before(() => {
     // Connect database to a different URL when local tests
     if (process.env.NODE_ENV === 'develop') {
       mongoose.connect(String(process.env.DATABASE_URL_TEST), {useNewUrlParser: true})
-      mongoose.set('setAndModify', false)
     }
-    done()
+
+    // Configure open connection
+    mongoose.connection.on('open', () => {
+      // Drop database before doing tests
+      mongoose.connection.db.dropDatabase(() => {
+        mongoose.set('setAndModify', false)
+      })
+    })
    })
+   // ** -- Tests -- ** //
   it("Initial test (deleted deprecated route)", (done) => {
     supertest(app)
     .get(api_url)
