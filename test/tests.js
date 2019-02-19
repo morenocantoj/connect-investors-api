@@ -9,7 +9,7 @@ import dotenv from 'dotenv'
 dotenv.config({path: './.env'})
 
 // Collections
-import { Criterias, Users } from '../data/db'
+import { Criterias, Users, Companies } from '../data/db'
 
 // Faker mock
 import faker from 'faker'
@@ -315,6 +315,27 @@ describe("Foundernest API test suite", () => {
         assert(resp.body.data.getCriterias.length, 2)
         done()
       })
+    })
+  })
+  describe("/** -- Company Tests -- **/", () => {
+    it("Create a Company model", async () => {
+      const newCompany = new Companies({
+        name: faker.company.companyName(),
+        ceo_name: faker.name.findName(),
+        url: faker.internet.url(),
+        email: faker.internet.email(),
+        telephone: faker.phone.phoneNumberFormat()
+      })
+      newCompany.id = newCompany._id
+
+      const createdCompany = await newCompany.save()
+      const savedCompany = await Companies.findById(createdCompany.id)
+
+      assert.equal(savedCompany.name, createdCompany.name)
+      assert.equal(savedCompany.ceo_name, createdCompany.ceo_name)
+      assert.equal(savedCompany.url, createdCompany.url)
+      assert.equal(savedCompany.email, createdCompany.email)
+      assert.equal(savedCompany.telephone, createdCompany.telephone)
     })
   })
 })

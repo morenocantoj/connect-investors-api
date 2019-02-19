@@ -10,6 +10,14 @@ type User {
   email: String
   role: UserRole
 }
+type Company {
+  id: ID
+  name: String
+  ceo_name: String
+  url: String
+  email: String
+  telephone: String
+}
 type Token {
   token: String
 }

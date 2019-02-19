@@ -46,4 +46,15 @@ userSchema.pre('save', function(next) {
 
 const Users = mongoose.model('users', userSchema)
 
-export { Criterias, Users }
+// Company Schema
+const companySchema = new mongoose.Schema({
+  name: String,
+  url: String,
+  ceo_name: String,
+  email: String,
+  telephone: String
+})
+
+const Companies = new mongoose.model('companies', companySchema)
+
+export { Criterias, Users, Companies }

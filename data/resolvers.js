@@ -1,4 +1,4 @@
-import { Criterias, Users } from './db'
+import { Criterias, Users, Companies } from './db'
 import to from 'await-to-js'
 import bcrypt from 'bcrypt'
 
