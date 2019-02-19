@@ -1,7 +1,7 @@
 import mongoose from 'mongoose'
 import bcrypt from 'bcrypt'
-
 import dotenv from 'dotenv'
+
 dotenv.config({path: './.env'})
 
 mongoose.Promise = global.Promise

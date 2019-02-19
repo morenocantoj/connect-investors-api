@@ -3,6 +3,11 @@ import app from '../index'
 import supertest from 'supertest';
 import assert from 'assert';
 
+import mongoose from 'mongoose'
+
+import dotenv from 'dotenv'
+dotenv.config({path: './.env'})
+
 // Collections
 import { Criterias, Users } from '../data/db'
 
@@ -30,6 +35,14 @@ function chk_a(err) {
 let tokenAdmin
 
 describe("Foundernest API test suite", () => {
+  before((done) => {
+    // Connect database to a different URL when local tests
+    if (process.env.NODE_ENV === 'develop') {
+      mongoose.connect(String(process.env.DATABASE_URL_TEST), {useNewUrlParser: true})
+      mongoose.set('setAndModify', false)
+    }
+    done()
+   })
   it("Initial test (deleted deprecated route)", (done) => {
     supertest(app)
     .get(api_url)
