@@ -46,6 +46,17 @@ export const resolvers = {
       if (err) return new Error('Error ocurred while retrieving companies!')
 
       return companies
+    },
+    getCompany: async (root, {id}, {actualUser}) => {
+      if (!actualUser) throw new Error("You're not logged in")
+
+      // Obtain the company
+      let err, company
+
+      [err, company] = await to(Companies.findById(id))
+      if (err) throw new Error("Error retrieving the company!")
+
+      return company
     }
   },
   Mutation: {

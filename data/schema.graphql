@@ -35,6 +35,7 @@ type Query {
   obtainUser: User
   # Company queries
   getCompanies(limit: Int, offset: Int): [Company]
+  getCompany(id: ID!): Company
 }
 input CriteriaInput {
   id: ID

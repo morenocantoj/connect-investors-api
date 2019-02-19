@@ -483,5 +483,46 @@ describe("Foundernest API test suite", () => {
         })
       })
     })
+    it("Get a specific company Query", async () => {
+      // Create three companies
+      const newCompany = new Companies({
+        name: faker.company.companyName(),
+        ceo_name: faker.name.findName(),
+        url: faker.internet.url(),
+        email: faker.internet.email(),
+        telephone: faker.phone.phoneNumberFormat()
+      })
+      newCompany.id = newCompany._id
+
+      await newCompany.save()
+
+      supertest(app)
+      .post(graphql_url)
+      .send({
+        query:
+          `query getCompany($id: ID!) {
+            getCompany(id: $id) {
+              id
+              name
+              ceo_name
+            }
+          }
+          `,
+        variables: {
+          "id": newCompany.id
+        }
+      })
+      .set('Content-Type', 'application/json')
+      .set('Authorization', 'Bearer ' + tokenAdmin)
+      .end((err, resp) => {
+        chk_a(err)
+        console.log(resp.body)
+        console.log(newCompany.id)
+        assert.equal(resp.body.data.getCompany.id, newCompany.id)
+        assert.equal(resp.body.data.getCompany.name, newCompany.name)
+        assert.equal(resp.body.data.getCompany.ceo_name, newCompany.ceo_name)
+      })
+
+    })
   })
 })
