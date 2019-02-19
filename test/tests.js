@@ -422,5 +422,107 @@ describe("Foundernest API test suite", () => {
         })
       })
     })
+    it("See all companies", (done) => {
+      // Create three companies
+      const newCompany1 = new Companies({
+        name: faker.company.companyName(),
+        ceo_name: faker.name.findName(),
+        url: faker.internet.url(),
+        email: faker.internet.email(),
+        telephone: faker.phone.phoneNumberFormat()
+      })
+      newCompany1.id = newCompany1._id
+
+      const newCompany2 = new Companies({
+        name: faker.company.companyName(),
+        ceo_name: faker.name.findName(),
+        url: faker.internet.url(),
+        email: faker.internet.email(),
+        telephone: faker.phone.phoneNumberFormat()
+      })
+      newCompany2.id = newCompany2._id
+
+      const newCompany3 = new Companies({
+        name: faker.company.companyName(),
+        ceo_name: faker.name.findName(),
+        url: faker.internet.url(),
+        email: faker.internet.email(),
+        telephone: faker.phone.phoneNumberFormat()
+      })
+      newCompany3.id = newCompany3._id
+
+      // Save them
+      let promises = []
+      promises.push(newCompany1.save())
+      promises.push(newCompany2.save())
+      promises.push(newCompany3.save())
+
+      Promise.all(promises).then((values) => {
+        supertest(app)
+        .post(graphql_url)
+        .send({
+          query:
+            `query getCompanies($limit: Int, $offset: Int) {
+              getCompanies(limit: $limit, offset: $offset) {
+                id
+                name
+                ceo_name
+              }
+            }
+            `,
+          variables: {
+            "limit": 2,
+            "offset": 1          }
+        })
+        .set('Content-Type', 'application/json')
+        .set('Authorization', 'Bearer ' + tokenAdmin)
+        .end((err, resp) => {
+          chk(err, done)
+          assert.equal(resp.body.data.getCompanies.length, 2)
+          done()
+        })
+      })
+    })
+    it("Get a specific company Query", async () => {
+      // Create three companies
+      const newCompany = new Companies({
+        name: faker.company.companyName(),
+        ceo_name: faker.name.findName(),
+        url: faker.internet.url(),
+        email: faker.internet.email(),
+        telephone: faker.phone.phoneNumberFormat()
+      })
+      newCompany.id = newCompany._id
+
+      await newCompany.save()
+
+      supertest(app)
+      .post(graphql_url)
+      .send({
+        query:
+          `query getCompany($id: ID!) {
+            getCompany(id: $id) {
+              id
+              name
+              ceo_name
+            }
+          }
+          `,
+        variables: {
+          "id": newCompany.id
+        }
+      })
+      .set('Content-Type', 'application/json')
+      .set('Authorization', 'Bearer ' + tokenAdmin)
+      .end((err, resp) => {
+        chk_a(err)
+        console.log(resp.body)
+        console.log(newCompany.id)
+        assert.equal(resp.body.data.getCompany.id, newCompany.id)
+        assert.equal(resp.body.data.getCompany.name, newCompany.name)
+        assert.equal(resp.body.data.getCompany.ceo_name, newCompany.ceo_name)
+      })
+
+    })
   })
 })
