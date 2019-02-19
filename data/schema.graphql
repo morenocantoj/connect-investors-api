@@ -33,6 +33,8 @@ type Query {
   getCriterias(limit: Int, offset: Int): [Criteria]
   # User queries
   obtainUser: User
+  # Company queries
+  getCompanies(limit: Int, offset: Int): [Company]
 }
 input CriteriaInput {
   id: ID

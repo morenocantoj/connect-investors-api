@@ -35,6 +35,17 @@ export const resolvers = {
       const user = await Users.findOne({email: actualUser.email})
 
       return (user)
+    },
+    getCompanies: async (root, {limit, offset}, {actualUser}) => {
+      if (!actualUser) throw new Error("You're not logged in!")
+
+      // Obtain all available companies
+      let err, companies
+      [err, companies] = await to(Companies.find({}).limit(limit).skip(offset))
+
+      if (err) return new Error('Error ocurred while retrieving companies!')
+
+      return companies
     }
   },
   Mutation: {
