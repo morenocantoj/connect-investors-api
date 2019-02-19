@@ -122,6 +122,12 @@ export const resolvers = {
       if (err) throw new Error('Error ocurred while creating a new company')
 
       return savedCompany
+    },
+    deleteCompany: async(root, {id}) => {
+      const err = await Companies.findOneAndDelete({id: id})
+      if (err) throw new Error('Error deleting company')
+
+      return true
     }
   }
 }

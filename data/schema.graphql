@@ -64,4 +64,5 @@ type Mutation {
   authenticateUser(email: String!, password: String!): Token
   # Company mutations
   createCompany(input: CompanyInput): Company
+  deleteCompany(id: ID!): Boolean
 }
