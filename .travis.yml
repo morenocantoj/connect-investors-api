@@ -2,7 +2,7 @@ language: node_js
 node_js:
   - "8"
 env:
-    - NODE_ENV='test' SECRET='secret'
+    - NODE_ENV='test' SECRET='secret' DATABASE_URL='mongodb://localhost/foundernest'
 cache:
   directories:
     - "node_modules"
