@@ -553,13 +553,54 @@ describe("Foundernest API test suite", () => {
       .set('Authorization', 'Bearer ' + tokenAdmin)
       .end((err, resp) => {
         chk_a(err)
-        console.log(resp.body)
-        console.log(newCompany.id)
         assert.equal(resp.body.data.getCompany.id, newCompany.id)
         assert.equal(resp.body.data.getCompany.name, newCompany.name)
         assert.equal(resp.body.data.getCompany.ceo_name, newCompany.ceo_name)
       })
+    })
+    it("Create a Company and check if investors have this company", (done) => {
+      supertest(app)
+      .post(graphql_url)
+      .send({
+        query:
+          `mutation createCompany($input: CompanyInput) {
+            createCompany(input: $input) {
+              name
+              ceo_name
+              telephone
+              email
+              id
+            }
+          }
+          `,
+        variables: {
+          "input": {
+            "name": "Zapdos",
+            "ceo_name": "Basilio Contreras",
+            "url": "www.zapdos.com",
+            "email": "zapdos@startup.com",
+            "telephone": "+34 744 444 222"
+          }
+        }
+      })
+      .set('Content-Type', 'application/json')
+      .end((err, resp) => {
+        chk(err, done)
+        return new Promise((resolve, reject) => {
+          const investors = Users.find({role: "INVESTOR"})
+          resolve(investors)
 
+        }).then((investors) => {
+          investors.map((investor) => {
+            assert(investor.possible_invest[investor.possible_invest.length - 1].name, "Zapdos")
+            assert(investor.possible_invest[investor.possible_invest.length - 1].ceo_name, "Basilio Contreras")
+            assert(investor.possible_invest[investor.possible_invest.length - 1].url, "www.zapdos.com")
+            assert(investor.possible_invest[investor.possible_invest.length - 1].email, "zapdos@startup.com")
+            assert(investor.possible_invest[investor.possible_invest.length - 1].telephone, "+34 744 444 222")
+          })
+          done()
+        })
+      })
     })
   })
 })

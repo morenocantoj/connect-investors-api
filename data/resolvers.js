@@ -161,7 +161,20 @@ export const resolvers = {
       })
       newCompany.id = newCompany._id
 
-      let err, savedCompany
+      // Add this new company to all investors' possible invest array
+      let err, investors
+
+      [err, investors] = await to(Users.find({role: "INVESTOR"}))
+      if (err) throw new Error('Error ocurred while retrieving users')
+
+      investors.map((investor) => {
+        investor.possible_invest.push(newCompany)
+        // We don't need to wait
+        investor.save()
+      })
+
+      // Save the new company
+      let savedCompany
 
       [err, savedCompany] = await to(newCompany.save())
       if (err) throw new Error('Error ocurred while creating a new company')
