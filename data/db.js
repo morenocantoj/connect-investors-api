@@ -23,7 +23,8 @@ const userSchema = new mongoose.Schema({
   name: String,
   email: String,
   password: String,
-  role: String
+  role: String,
+  possible_invest: Array
 })
 
 // Middleware to hash passwords before save them

@@ -38,16 +38,13 @@ describe("Foundernest API test suite", () => {
   before(() => {
     // Connect database to a different URL when local tests
     if (process.env.NODE_ENV === 'develop') {
-      mongoose.connect(String(process.env.DATABASE_URL_TEST), {useNewUrlParser: true})
-    }
-
-    // Configure open connection
-    mongoose.connection.on('open', () => {
-      // Drop database before doing tests
-      mongoose.connection.db.dropDatabase(() => {
-        mongoose.set('setAndModify', false)
+      mongoose.connect(String(process.env.DATABASE_URL_TEST), {useNewUrlParser: true}, () => {
+        // Drop database before doing tests
+        mongoose.connection.db.dropDatabase(() => {
+          mongoose.set('setAndModify', false)
+        })
       })
-    })
+    }
    })
    // ** -- Tests -- ** //
   it("Initial test (deleted deprecated route)", (done) => {
@@ -189,6 +186,46 @@ describe("Foundernest API test suite", () => {
       .end((err, resp) => {
         chk(err, done)
         assert.equal(resp.body.errors[0].message, 'Incorrect password')
+        done()
+      })
+    })
+    it("Mutation to register as a new INVERSOR", (done) => {
+      const name = faker.name.findName()
+      const email = faker.internet.email()
+      const password = faker.internet.password()
+
+      supertest(app)
+      .post(graphql_url)
+      .send({
+        query:
+          `mutation registerInvestor($input: UserInput) {
+            registerInvestor(input: $input) {
+              id
+              name
+              email
+              role
+              possible_invest {
+                name
+                ceo_name
+              }
+            }
+          }`,
+        variables: {
+          "input": {
+            "name": name,
+            "email": email,
+            "password": password,
+            "role": "INVESTOR"
+          }
+        }
+      })
+      .set('Content-Type', 'application/json')
+      .end((err, resp) => {
+        chk(err, done)
+        assert.equal(resp.body.data.registerInvestor.name, name)
+        assert.equal(resp.body.data.registerInvestor.email, email)
+        assert.equal(resp.body.data.registerInvestor.role, "INVESTOR")
+        assert.notEqual(resp.body.data.registerInvestor.possible_invest, undefined)
         done()
       })
     })
@@ -516,13 +553,54 @@ describe("Foundernest API test suite", () => {
       .set('Authorization', 'Bearer ' + tokenAdmin)
       .end((err, resp) => {
         chk_a(err)
-        console.log(resp.body)
-        console.log(newCompany.id)
         assert.equal(resp.body.data.getCompany.id, newCompany.id)
         assert.equal(resp.body.data.getCompany.name, newCompany.name)
         assert.equal(resp.body.data.getCompany.ceo_name, newCompany.ceo_name)
       })
+    })
+    it("Create a Company and check if investors have this company", (done) => {
+      supertest(app)
+      .post(graphql_url)
+      .send({
+        query:
+          `mutation createCompany($input: CompanyInput) {
+            createCompany(input: $input) {
+              name
+              ceo_name
+              telephone
+              email
+              id
+            }
+          }
+          `,
+        variables: {
+          "input": {
+            "name": "Zapdos",
+            "ceo_name": "Basilio Contreras",
+            "url": "www.zapdos.com",
+            "email": "zapdos@startup.com",
+            "telephone": "+34 744 444 222"
+          }
+        }
+      })
+      .set('Content-Type', 'application/json')
+      .end((err, resp) => {
+        chk(err, done)
+        return new Promise((resolve, reject) => {
+          const investors = Users.find({role: "INVESTOR"})
+          resolve(investors)
 
+        }).then((investors) => {
+          investors.map((investor) => {
+            assert(investor.possible_invest[investor.possible_invest.length - 1].name, "Zapdos")
+            assert(investor.possible_invest[investor.possible_invest.length - 1].ceo_name, "Basilio Contreras")
+            assert(investor.possible_invest[investor.possible_invest.length - 1].url, "www.zapdos.com")
+            assert(investor.possible_invest[investor.possible_invest.length - 1].email, "zapdos@startup.com")
+            assert(investor.possible_invest[investor.possible_invest.length - 1].telephone, "+34 744 444 222")
+          })
+          done()
+        })
+      })
     })
   })
 })
