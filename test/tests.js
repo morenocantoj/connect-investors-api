@@ -189,44 +189,64 @@ describe("Foundernest API test suite", () => {
         done()
       })
     })
-    it("Mutation to register as a new INVERSOR", (done) => {
+    it("Mutation to register as a new INVERSOR", () => {
       const name = faker.name.findName()
       const email = faker.internet.email()
       const password = faker.internet.password()
 
-      supertest(app)
-      .post(graphql_url)
-      .send({
-        query:
-          `mutation registerInvestor($input: UserInput) {
-            registerInvestor(input: $input) {
-              id
-              name
-              email
-              role
-              possible_invest {
-                name
-                ceo_name
-              }
-            }
-          }`,
-        variables: {
-          "input": {
-            "name": name,
-            "email": email,
-            "password": password,
-            "role": "INVESTOR"
-          }
-        }
+      // A company is needed
+      const newCompany = new Companies({
+        name: faker.company.companyName(),
+        ceo_name: faker.name.findName(),
+        url: faker.internet.url(),
+        email: faker.internet.email(),
+        telephone: faker.phone.phoneNumberFormat()
       })
-      .set('Content-Type', 'application/json')
-      .end((err, resp) => {
-        chk(err, done)
-        assert.equal(resp.body.data.registerInvestor.name, name)
-        assert.equal(resp.body.data.registerInvestor.email, email)
-        assert.equal(resp.body.data.registerInvestor.role, "INVESTOR")
-        assert.notEqual(resp.body.data.registerInvestor.possible_invest, undefined)
-        done()
+      newCompany.id = newCompany._id
+
+      return new Promise((resolve) => {
+        resolve(newCompany.save())
+
+      }).then(() => {
+        supertest(app)
+        .post(graphql_url)
+        .send({
+          query:
+            `mutation registerInvestor($input: UserInput) {
+              registerInvestor(input: $input) {
+                id
+                name
+                email
+                role
+                possible_invest {
+                  status
+                  key
+                  company {
+                    name
+                    ceo_name
+                  }
+                }
+              }
+            }`,
+          variables: {
+            "input": {
+              "name": name,
+              "email": email,
+              "password": password,
+              "role": "INVESTOR"
+            }
+          }
+        })
+        .set('Content-Type', 'application/json')
+        .end((err, resp) => {
+          chk_a(err)
+          assert.equal(resp.body.data.registerInvestor.name, name)
+          assert.equal(resp.body.data.registerInvestor.email, email)
+          assert.equal(resp.body.data.registerInvestor.role, "INVESTOR")
+          assert.equal(resp.body.data.registerInvestor.possible_invest[0].status, "Waiting Decision")
+          assert.equal(resp.body.data.registerInvestor.possible_invest[0].key, "WAITING")
+          assert.notEqual(resp.body.data.registerInvestor.possible_invest[0].company, undefined)
+        })
       })
     })
   })

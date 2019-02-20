@@ -107,14 +107,25 @@ export const resolvers = {
     },
     registerInvestor: async (root, {input}) => {
       // Check if user already exists in database
-      const userExists = await checkUserInDatabase(input)
-      if (userExists) return new Error('User already exists in database')
+      /*const userExists = await checkUserInDatabase(input)
+      if (userExists) return new Error('User already exists in database')*/
 
       // Get all existing companies and add them to the new investor
       let err, companies
-      [err, companies] = await to(Companies.find({}))
 
+      [err, companies] = await to(Companies.find({}))
       if (err) return new Error('Error ocurred while retrieving companies!')
+
+      // All companies will be pending when investor is registered
+      let companiesWithStatus = []
+
+      companies.map((company) => {
+        companiesWithStatus.push({
+          status: "Waiting Decision",
+          key: "WAITING",
+          company: company
+        })
+      })
 
       // Register a new INVESTOR
       const newUser = new Users({
@@ -122,7 +133,7 @@ export const resolvers = {
         email: input.email,
         password: input.password,
         role: "INVESTOR",
-        possible_invest: companies
+        possible_invest: companiesWithStatus
       })
 
       let savedUser
