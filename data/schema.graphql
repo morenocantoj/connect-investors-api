@@ -39,6 +39,7 @@ type Query {
   getCriterias(limit: Int, offset: Int): [Criteria]
   # User queries
   obtainUser: User
+  getCompaniesFromInvestor(limit: Int, offset: Int, key: String): [CompanyStatus]
   # Company queries
   getCompanies(limit: Int, offset: Int): [Company]
   getCompany(id: ID!): Company
