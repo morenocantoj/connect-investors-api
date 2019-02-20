@@ -9,6 +9,7 @@ type User {
   name: String
   email: String
   role: UserRole
+  possible_invest: [Company]
 }
 type Company {
   id: ID
@@ -48,7 +49,7 @@ input UserInput {
   name: String!
   email: String!
   password: String!
-  role: UserRole!
+  role: UserRole
 }
 input CompanyInput {
   id: ID
@@ -64,6 +65,7 @@ type Mutation {
   createCriteria(input: CriteriaInput): Criteria
   # User mutations
   createUserAdmin(input: UserInput): User
+  registerInvestor(input: UserInput): User
   authenticateUser(email: String!, password: String!): Token
   # Company mutations
   createCompany(input: CompanyInput): Company

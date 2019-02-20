@@ -189,6 +189,46 @@ describe("Foundernest API test suite", () => {
         done()
       })
     })
+    it("Mutation to register as a new INVERSOR", (done) => {
+      const name = faker.name.findName()
+      const email = faker.internet.email()
+      const password = faker.internet.password()
+
+      supertest(app)
+      .post(graphql_url)
+      .send({
+        query:
+          `mutation registerInvestor($input: UserInput) {
+            registerInvestor(input: $input) {
+              id
+              name
+              email
+              role
+              possible_invest {
+                name
+                ceo_name
+              }
+            }
+          }`,
+        variables: {
+          "input": {
+            "name": name,
+            "email": email,
+            "password": password,
+            "role": "INVESTOR"
+          }
+        }
+      })
+      .set('Content-Type', 'application/json')
+      .end((err, resp) => {
+        chk(err, done)
+        assert.equal(resp.body.data.registerInvestor.name, name)
+        assert.equal(resp.body.data.registerInvestor.email, email)
+        assert.equal(resp.body.data.registerInvestor.role, "INVESTOR")
+        assert.notEqual(resp.body.data.registerInvestor.possible_invest, undefined)
+        done()
+      })
+    })
   })
   describe("/** -- Criteria Tests -- **/", () => {
     it("Create a new Criteria object", async () => {

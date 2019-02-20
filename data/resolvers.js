@@ -1,4 +1,5 @@
 import { Criterias, Users, Companies } from './db'
+import { checkUserInDatabase } from '../helpers'
 import to from 'await-to-js'
 import bcrypt from 'bcrypt'
 
@@ -87,12 +88,8 @@ export const resolvers = {
       if (!actualUser || actualUser.role !== "ADMIN") throw new Error("You are not allowed to do this")
 
       // Check if user already exists in database
-      let err, existingUser
-      [err, existingUser] = await to(Users.findOne({email: input.email}))
-
-      if (err) return new Error('Error ocurred while checking if user already exists')
-      // If an object is returned, it means we have already an existing user
-      if (existingUser) return new Error('User already exists in database')
+      const userExists = await checkUserInDatabase(input)
+      if (userExists) return new Error('User already exists in database')
 
       // Create the new user and save it
       const newUser = new Users({
@@ -100,6 +97,32 @@ export const resolvers = {
         email: input.email,
         password: input.password,
         role: input.role
+      })
+
+      let err, savedUser
+      [err, savedUser] = await to(newUser.save())
+
+      if (err) return new Error('Error ocurred while saving new user')
+      return (savedUser)
+    },
+    registerInvestor: async (root, {input}) => {
+      // Check if user already exists in database
+      const userExists = await checkUserInDatabase(input)
+      if (userExists) return new Error('User already exists in database')
+
+      // Get all existing companies and add them to the new investor
+      let err, companies
+      [err, companies] = await to(Companies.find({}))
+
+      if (err) return new Error('Error ocurred while retrieving companies!')
+
+      // Register a new INVESTOR
+      const newUser = new Users({
+        name: input.name,
+        email: input.email,
+        password: input.password,
+        role: "INVESTOR",
+        possible_invest: companies
       })
 
       let savedUser
