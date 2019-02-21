@@ -1,5 +1,5 @@
 import { Criterias, Users, Companies } from './db'
-import { checkUserInDatabase, passCompanyToPhase } from '../helpers'
+import { checkUserInDatabase, passCompanyToPhase, addSelectedCriteriaToUser, answerUserCompanyCriteria } from '../helpers'
 import to from 'await-to-js'
 import bcrypt from 'bcrypt'
 import mongoose from 'mongoose'
@@ -212,6 +212,58 @@ export const resolvers = {
       return {
         token: createToken(user, process.env.SECRET, '1hr')
       }
+    },
+    addCriteriaToUser: async (root, {id, type}, {actualUser}) => {
+      if (!actualUser || actualUser.role !== "INVESTOR") {
+        throw new Error("You're not allowed to see this resource")
+      }
+      // Get user and the selected criteria
+      let promises = []
+      promises.push(Users.findById(actualUser.id))
+      promises.push(Criterias.findById(id))
+
+      return Promise.all(promises)
+        .then(async (resolutions) => {
+          const user = resolutions[0]
+          const criteria = resolutions[1]
+
+          // Create a new selected criteria for that user
+          const selectedCriteria = {
+            text: criteria.text,
+            key: criteria.key,
+            icon: criteria.icon,
+            type: type
+          }
+          // Create a new default answer criteria
+          const answerCriteriaDefault = {
+            text: criteria.text,
+            key: criteria.key,
+            type: type,
+            answer: "?"
+          }
+
+          // Apply changes to user
+          const criteriaSet = await addSelectedCriteriaToUser(user, selectedCriteria, answerCriteriaDefault)
+          if (criteriaSet) return selectedCriteria
+        })
+        .catch((err) => {
+          console.log(err)
+          throw new Error('Error retrieving data from database')
+        })
+    },
+    answerUserCriteria: async(root, {id, key, answer}, {actualUser}) => {
+      if (!actualUser || actualUser.role !== "INVESTOR") {
+        throw new Error("You're not allowed to see this resource")
+      }
+
+      let err, user, answerResponse
+
+      [err, user] = await to(Users.findById(actualUser.id))
+      if (err) throw new Error("Error retrieving user from database")
+
+      answerResponse = answerUserCompanyCriteria(user, {id, key, answer})
+      
+      return answerResponse
     },
     createCompany: async(root, {input}) => {
       const newCompany = new Companies({

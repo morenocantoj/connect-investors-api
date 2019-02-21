@@ -27,13 +27,29 @@ const criteriaSchema = new mongoose.Schema({
   icon: String
 })
 
+const criteriasUserSchema = new mongoose.Schema({
+  text: String,
+  key: String,
+  icon: String,
+  type: String
+})
+
+const criteriaAnswerSchema = new mongoose.Schema({
+  text: String,
+  key: String,
+  type: String,
+  answer: String // Y, N or ?
+})
+
 const Criterias = mongoose.model('criterias', criteriaSchema)
 
 // User Schema
+
 const possibleInvestSchema = new mongoose.Schema({
   status: String,
   key: String,
-  company: companySchema
+  company: companySchema,
+  answers: [criteriaAnswerSchema]
 })
 
 const userSchema = new mongoose.Schema({
@@ -41,6 +57,7 @@ const userSchema = new mongoose.Schema({
   email: String,
   password: String,
   role: String,
+  criterias: [criteriasUserSchema],
   possible_invest: [possibleInvestSchema]
 })
 
