@@ -106,6 +106,34 @@ export const resolvers = {
       if (err) throw new Error("Error retrieving the company!")
 
       return company
+    },
+    getCompanyMustHaves: async (root, {id}, {actualUser}) => {
+      if (!actualUser || actualUser.role !== "INVESTOR") {
+        throw new Error("You're not allowed to see this resource")
+      }
+
+      let err, user
+
+      [err, user] = await to(Users.findById(actualUser.id).lean())
+      if (err) throw new Error("Error retrieving user from database")
+
+      // Select the specified company
+      let allAnswers = []
+
+      user.possible_invest.forEach((statusCompany) => {
+        if (statusCompany.company._id == id) {
+          allAnswers = statusCompany.answers
+          return
+        }
+      })
+
+      if (!allAnswers) throw new Error(`Unable to find company ${id}`)
+
+      const filteredAnswers = allAnswers.filter((item) => {
+        return item.type == "MUST"
+      })
+
+      return filteredAnswers
     }
   },
 
@@ -239,7 +267,7 @@ export const resolvers = {
             text: criteria.text,
             key: criteria.key,
             type: type,
-            answer: "?"
+            answer: "DN"
           }
 
           // Apply changes to user
@@ -247,7 +275,6 @@ export const resolvers = {
           if (criteriaSet) return selectedCriteria
         })
         .catch((err) => {
-          console.log(err)
           throw new Error('Error retrieving data from database')
         })
     },
@@ -262,7 +289,7 @@ export const resolvers = {
       if (err) throw new Error("Error retrieving user from database")
 
       answerResponse = answerUserCompanyCriteria(user, {id, key, answer})
-      
+
       return answerResponse
     },
     createCompany: async(root, {input}) => {
