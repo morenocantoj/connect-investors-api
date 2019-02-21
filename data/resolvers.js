@@ -1,7 +1,7 @@
 import { Criterias, Users, Companies } from './db'
 import { checkUserInDatabase, passCompanyToPhase,
   addSelectedCriteriaToUser, answerUserCompanyCriteria,
-  getUserCompanyCriterias } from '../helpers'
+  getUserCompanyCriterias, statsUserCompanyCriterias } from '../helpers'
 import to from 'await-to-js'
 import bcrypt from 'bcrypt'
 import mongoose from 'mongoose'
@@ -119,10 +119,25 @@ export const resolvers = {
       [err, user] = await to(Users.findById(actualUser.id).lean())
       if (err) throw new Error("Error retrieving user from database")
 
-      // Select the specified company
+      // Select the specified company and type
       const filteredAnswers = getUserCompanyCriterias(user, id, type)
 
       return filteredAnswers
+    },
+    statsUserCompanyCriteriasByType: async (root, {id, type}, {actualUser}) => {
+      if (!actualUser || actualUser.role !== "INVESTOR") {
+        throw new Error("You're not allowed to see this resource")
+      }
+
+      let err, user
+
+      [err, user] = await to(Users.findById(actualUser.id).lean())
+      if (err) throw new Error("Error retrieving user from database")
+
+      // Select the specified company and type
+      const stats = statsUserCompanyCriterias(user, id, type)
+
+      return stats
     }
   },
 
