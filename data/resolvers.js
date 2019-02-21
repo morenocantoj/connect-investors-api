@@ -269,6 +269,21 @@ export const resolvers = {
       if (!saved) throw new Error("No company has been found")
 
       return true
+    },
+    passCompanyToDiscarded: async(root, {id}, {actualUser}) => {
+      if (!actualUser || actualUser.role !== "INVESTOR") {
+        throw new Error("You're not allowed to see this resource")
+      }
+      const phase = {
+        key: "DISCARDED",
+        status: "Discarded after Screening"
+      }
+      const saved = await passCompanyToPhase(actualUser.id, id, phase)
+
+      // Not found
+      if (!saved) throw new Error("No company has been found")
+
+      return true
     }
   }
 }
