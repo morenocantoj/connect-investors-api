@@ -638,11 +638,10 @@ describe("Foundernest API test suite", function() {
           resolve(investors)
 
         }).then((investors) => {
-          investors.map((investor) => {
-            assert.equal(investor.possible_invest[investor.possible_invest.length - 1].company.name, "Zapdos")
-            assert.equal(investor.possible_invest[investor.possible_invest.length - 1].company.ceo_name, "Basilio Contreras")
-          })
-          done()
+            const lastInvestor = investors[investors.length - 1]
+            assert.equal(lastInvestor.possible_invest[lastInvestor.possible_invest.length - 1].company.name, "Zapdos")
+            assert.equal(lastInvestor.possible_invest[lastInvestor.possible_invest.length - 1].company.ceo_name, "Basilio Contreras")
+            done()
         })
       })
     })

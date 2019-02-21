@@ -10,6 +10,19 @@ type User {
   email: String
   role: UserRole
   possible_invest: [CompanyStatus]
+  criterias: [CriteriaSelected]
+}
+type CriteriaAnswer {
+  text: String
+  key: String
+  type: TypeCriteria
+  answer: AnswerCriteria
+}
+type CriteriaSelected {
+  text: String
+  key: String
+  icon: String
+  type: TypeCriteria
 }
 type Company {
   id: ID
@@ -23,6 +36,7 @@ type CompanyStatus {
   status: String
   key: String
   company: Company
+  answers: [CriteriaAnswer]
 }
 type Token {
   token: String
@@ -30,6 +44,16 @@ type Token {
 enum UserRole {
   ADMIN
   INVESTOR
+}
+enum TypeCriteria {
+  MUST
+  SUPER_NICE
+  NICE
+}
+enum AnswerCriteria {
+  Y # Yes
+  N # No
+  DN # ?
 }
 type Query {
   # Hello World Query in GraphQL
@@ -73,6 +97,7 @@ type Mutation {
   createUserAdmin(input: UserInput): User
   registerInvestor(input: UserInput): User
   authenticateUser(email: String!, password: String!): Token
+  addCriteriaToUser(id: ID!, type: TypeCriteria!): CriteriaSelected
   # Company mutations
   createCompany(input: CompanyInput): Company
   deleteCompany(id: ID!): Boolean

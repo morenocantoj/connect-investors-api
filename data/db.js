@@ -36,6 +36,7 @@ const criteriasUserSchema = new mongoose.Schema({
 
 const criteriaAnswerSchema = new mongoose.Schema({
   text: String,
+  key: String,
   type: String,
   answer: String // Y, N or ?
 })

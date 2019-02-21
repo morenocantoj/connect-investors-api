@@ -36,3 +36,20 @@ export const passCompanyToPhase = async(userId, companyId, phase) => {
   }
   return false
 }
+
+export const addSelectedCriteriaToUser = async(user, criteria, criteriaAnswer) => {
+  // Add new selected criteria to the user
+  user.criterias.push(criteria)
+
+  // Iterate for each user's company and set the new criteria
+  user.possible_invest.map((companyStatus) => {
+    companyStatus.answers.push(criteriaAnswer)
+  })
+
+  // Save changes
+  user.save((err) => {
+    console.log(err)
+    if (err) throw new Error("Error updating user's company")
+  })
+  return true
+}
