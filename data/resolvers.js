@@ -1,5 +1,5 @@
 import { Criterias, Users, Companies } from './db'
-import { checkUserInDatabase } from '../helpers'
+import { checkUserInDatabase, passCompanyToPhase } from '../helpers'
 import to from 'await-to-js'
 import bcrypt from 'bcrypt'
 import mongoose from 'mongoose'
@@ -259,29 +259,16 @@ export const resolvers = {
       if (!actualUser || actualUser.role !== "INVESTOR") {
         throw new Error("You're not allowed to see this resource")
       }
-
-      let err, user
-
-      [err, user] = await to(Users.findById({"_id": actualUser.id}))
-      if (err) throw new Error("Error retrieving data")
-
-      // Search specific element
-      for (let i=0; i<user.possible_invest.length; i++) {
-        if (user.possible_invest[i].company._id == id) {
-          // Update this company
-          user.possible_invest[i].key = "FIRST_MEETING"
-          user.possible_invest[i].status = "First Meeting"
-
-          user.save((err) => {
-            if (err) throw new Error("Error updating user's company")
-          })
-
-          return true
-        }
+      const phase = {
+        key: "FIRST_MEETING",
+        status: "First Meeting"
       }
+      const saved = await passCompanyToPhase(actualUser.id, id, phase)
 
       // Not found
-      throw new Error("No company has been found")
+      if (!saved) throw new Error("No company has been found")
+
+      return true
     }
   }
 }
