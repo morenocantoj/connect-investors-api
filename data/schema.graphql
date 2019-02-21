@@ -98,6 +98,7 @@ type Mutation {
   registerInvestor(input: UserInput): User
   authenticateUser(email: String!, password: String!): Token
   addCriteriaToUser(id: ID!, type: TypeCriteria!): CriteriaSelected
+  answerUserCriteria(id: ID!, key: String!, answer: AnswerCriteria!): CriteriaAnswer
   # Company mutations
   createCompany(input: CompanyInput): Company
   deleteCompany(id: ID!): Boolean

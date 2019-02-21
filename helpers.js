@@ -48,8 +48,34 @@ export const addSelectedCriteriaToUser = async(user, criteria, criteriaAnswer) =
 
   // Save changes
   user.save((err) => {
-    console.log(err)
     if (err) throw new Error("Error updating user's company")
   })
   return true
+}
+
+export const answerUserCompanyCriteria = (user, inputData) => {
+  let promise = null
+  let answer = null
+
+  // Iterate for each user's company and set the new answer to the correct criteria
+  user.possible_invest.forEach((companyStatus) => {
+    if (companyStatus.company._id == inputData.id) {
+      // Set answer
+      companyStatus.answers.forEach((answerObj) => {
+        if (answerObj.key === inputData.key) {
+          answerObj.answer = inputData.answer
+          answer = answerObj
+
+          return
+        }
+      })
+      return
+    }
+  })
+
+  if(answer !== null) {
+    user.save()
+  }
+
+  return answer
 }

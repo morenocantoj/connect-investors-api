@@ -1,5 +1,5 @@
 import { Criterias, Users, Companies } from './db'
-import { checkUserInDatabase, passCompanyToPhase, addSelectedCriteriaToUser } from '../helpers'
+import { checkUserInDatabase, passCompanyToPhase, addSelectedCriteriaToUser, answerUserCompanyCriteria } from '../helpers'
 import to from 'await-to-js'
 import bcrypt from 'bcrypt'
 import mongoose from 'mongoose'
@@ -250,6 +250,20 @@ export const resolvers = {
           console.log(err)
           throw new Error('Error retrieving data from database')
         })
+    },
+    answerUserCriteria: async(root, {id, key, answer}, {actualUser}) => {
+      if (!actualUser || actualUser.role !== "INVESTOR") {
+        throw new Error("You're not allowed to see this resource")
+      }
+
+      let err, user, answerResponse
+
+      [err, user] = await to(Users.findById(actualUser.id))
+      if (err) throw new Error("Error retrieving user from database")
+
+      answerResponse = answerUserCompanyCriteria(user, {id, key, answer})
+      
+      return answerResponse
     },
     createCompany: async(root, {input}) => {
       const newCompany = new Companies({
