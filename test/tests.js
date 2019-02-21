@@ -39,7 +39,9 @@ const nameInverstor = faker.name.findName()
 const emailInverstor = "investor@investor.com"
 const passwordInverstor = "investor"
 
-describe("Foundernest API test suite", () => {
+describe("Foundernest API test suite", function() {
+  this.timeout(3500)
+
   before(() => {
     // Connect database to a different URL when local tests
     if (process.env.NODE_ENV === 'develop') {
@@ -639,8 +641,8 @@ describe("Foundernest API test suite", () => {
           investors.map((investor) => {
             assert.equal(investor.possible_invest[investor.possible_invest.length - 1].company.name, "Zapdos")
             assert.equal(investor.possible_invest[investor.possible_invest.length - 1].company.ceo_name, "Basilio Contreras")
-            done()
           })
+          done()
         })
       })
     })
@@ -694,6 +696,137 @@ describe("Foundernest API test suite", () => {
           done()
         })
       })
+    })
+  })
+  describe("/** -- Function tests -- **/", () => {
+    it("Create an investor model with selected criterias", async () => {
+      const newCriteria1 = new Criterias({
+        text: "CEO full-time",
+        key: "CEO_FULL_TIME",
+        icon: "car"
+      })
+      newCriteria1.id = newCriteria1._id
+
+      const newCriteria2 = new Criterias({
+        text: "Founding Team is full-time",
+        key: "FOUNDING_FULL_T",
+        icon: "gear"
+      })
+      newCriteria2.id = newCriteria2._id
+
+      const savedCr1 = await newCriteria1.save()
+      const savedCr2 = await newCriteria2.save()
+
+      // Create the selected criterias for the new user
+      const selected1 = {
+        text: savedCr1.text,
+        key: savedCr1.key,
+        icon: savedCr1.icon,
+        type: "MUST"
+      }
+      const selected2 = {
+        text: savedCr2.text,
+        key: savedCr2.key,
+        icon: savedCr2.icon,
+        type: "NICE"
+      }
+      const userCriterias = [selected1, selected2]
+
+      const newUser = new Users({
+        name: "Test",
+        email: "test@example.com",
+        password: "test",
+        role: "INVESTOR",
+        criterias : userCriterias,
+        possible_invest: []
+      })
+
+      const savedUser = await newUser.save()
+
+      assert.equal(savedUser.criterias.length, 2)
+      assert.equal(savedUser.criterias[0].key, "CEO_FULL_TIME")
+      assert.equal(savedUser.criterias[0].type, "MUST")
+      assert.equal(savedUser.criterias[1].key, "FOUNDING_FULL_T")
+      assert.equal(savedUser.criterias[1].type, "NICE")
+    })
+    it("Create an investor model with selected criterias and answers to companies", async () => {
+      const newCriteria1 = new Criterias({
+        text: "CEO full-time",
+        key: "CEO_FULL_TIME",
+        icon: "car"
+      })
+      newCriteria1.id = newCriteria1._id
+
+      const newCriteria2 = new Criterias({
+        text: "Founding Team is full-time",
+        key: "FOUNDING_FULL_T",
+        icon: "gear"
+      })
+      newCriteria2.id = newCriteria2._id
+
+      const savedCr1 = await newCriteria1.save()
+      const savedCr2 = await newCriteria2.save()
+
+      // Create the selected criterias for the new user
+      const selected1 = {
+        text: savedCr1.text,
+        key: savedCr1.key,
+        icon: savedCr1.icon,
+        type: "MUST"
+      }
+      const selected2 = {
+        text: savedCr2.text,
+        key: savedCr2.key,
+        icon: savedCr2.icon,
+        type: "NICE"
+      }
+      const userCriterias = [selected1, selected2]
+
+      // Create one company and assign it to new user
+      // A company is needed
+      const newCompany = new Companies({
+        name: faker.company.companyName(),
+        ceo_name: faker.name.findName(),
+        url: faker.internet.url(),
+        email: faker.internet.email(),
+        telephone: faker.phone.phoneNumberFormat()
+      })
+      newCompany.id = newCompany._id
+
+      const savedCompany = await newCompany.save()
+
+      const criteriaAnswer1 = {
+        text: selected1.text,
+        type: selected1.type,
+        answer: "?"
+      }
+      const criteriaAnswer2 = {
+        text: selected2.text,
+        type: selected2.type,
+        answer: "N"
+      }
+
+      const userCompany = {
+        company: savedCompany,
+        status: "Waiting Decision",
+        key: "WAITING",
+        answers: [criteriaAnswer1, criteriaAnswer2]
+      }
+
+      const newUser = new Users({
+        name: "Test",
+        email: "test2@example.com",
+        password: "test",
+        role: "INVESTOR",
+        criterias : userCriterias,
+        possible_invest: [userCompany]
+      })
+
+      const savedUser = await newUser.save()
+
+      assert.equal(savedUser.possible_invest[0].answers.length, 2)
+      assert.equal(savedUser.possible_invest[0].answers[0].answer, "?")
+      assert.equal(savedUser.possible_invest[0].answers[1].answer, "N")
     })
   })
 })
