@@ -13,3 +13,26 @@ export const checkUserInDatabase = async (userInput) => {
 
   return false
 }
+
+export const passCompanyToPhase = async(userId, companyId, phase) => {
+  let err, user
+
+  [err, user] = await to(Users.findById({"_id": userId}))
+  if (err) throw new Error("Error retrieving data")
+
+  // Search specific element
+  for (let i=0; i<user.possible_invest.length; i++) {
+    if (user.possible_invest[i].company._id == companyId) {
+      // Update this company
+      user.possible_invest[i].key = phase.key
+      user.possible_invest[i].status = phase.status
+
+      user.save((err) => {
+        if (err) throw new Error("Error updating user's company")
+      })
+
+      return true
+    }
+  }
+  return false
+}

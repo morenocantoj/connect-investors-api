@@ -9,7 +9,7 @@ type User {
   name: String
   email: String
   role: UserRole
-  possible_invest: [Company]
+  possible_invest: [CompanyStatus]
 }
 type Company {
   id: ID
@@ -18,6 +18,11 @@ type Company {
   url: String
   email: String
   telephone: String
+}
+type CompanyStatus {
+  status: String
+  key: String
+  company: Company
 }
 type Token {
   token: String
@@ -34,6 +39,7 @@ type Query {
   getCriterias(limit: Int, offset: Int): [Criteria]
   # User queries
   obtainUser: User
+  getCompaniesFromInvestor(limit: Int, offset: Int, key: String): [CompanyStatus]
   # Company queries
   getCompanies(limit: Int, offset: Int): [Company]
   getCompany(id: ID!): Company
@@ -70,4 +76,6 @@ type Mutation {
   # Company mutations
   createCompany(input: CompanyInput): Company
   deleteCompany(id: ID!): Boolean
+  passCompanyToFirstMeeting(id: ID!): Boolean
+  passCompanyToDiscarded(id: ID!): Boolean
 }

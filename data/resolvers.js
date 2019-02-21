@@ -1,7 +1,8 @@
 import { Criterias, Users, Companies } from './db'
-import { checkUserInDatabase } from '../helpers'
+import { checkUserInDatabase, passCompanyToPhase } from '../helpers'
 import to from 'await-to-js'
 import bcrypt from 'bcrypt'
+import mongoose from 'mongoose'
 
 // JWT
 import dotenv from 'dotenv'
@@ -11,9 +12,9 @@ import jwt from 'jsonwebtoken'
 
 const createToken = (loginUser, secret, expiresIn) => {
   // Get unique email and role from user login
-  const {email, role} = loginUser
+  const {id, email, role} = loginUser
 
-  return jwt.sign({email, role}, secret, {expiresIn})
+  return jwt.sign({id, email, role}, secret, {expiresIn})
 }
 
 export const resolvers = {
@@ -48,6 +49,53 @@ export const resolvers = {
 
       return companies
     },
+    getCompaniesFromInvestor: async (root, {limit, offset, key}, {actualUser}) => {
+      if (!actualUser || actualUser.role !== "INVESTOR") {
+        throw new Error("You're not allowed to see this resource")
+      }
+
+      let err, userCompanies, companies, project
+
+      // Don't do an slice when making an aggregate
+      if (!limit || !offset) {
+        project = {
+          _id: 0,
+          possible_invest : 1
+        }
+      } else {
+        project = {
+          _id:0,
+          possible_invest: {$slice: ["$possible_invest", offset, limit]}
+        }
+      }
+
+      // Filter companies from this user
+      if (key) {
+        // Only get investor's companies those are in a certain key status
+        [err, userCompanies] = await to(Users.aggregate([
+          {$match: {'possible_invest.key': { $eq: key }}},
+          {$match: {"email": actualUser.email}},
+          {$project : project}
+        ]))
+
+      } else {
+        // Obtain all companies from this investor regardless of its status
+        [err, userCompanies] = await to(Users.aggregate([
+          {$match: {"email": actualUser.email}},
+          {$project : project}
+        ]))
+      }
+
+      if (err) throw new Error("Error retrieving user from database")
+
+      // Add the id
+      userCompanies[0].possible_invest.map((statusCompany) => {
+        statusCompany.company.id = statusCompany.company._id
+      })
+      companies = userCompanies[0].possible_invest
+
+      return companies
+    },
     getCompany: async (root, {id}, {actualUser}) => {
       if (!actualUser) throw new Error("You're not logged in")
 
@@ -60,6 +108,7 @@ export const resolvers = {
       return company
     }
   },
+
   Mutation: {
     // Criteria mutations
     createCriteria: async (root, {input}, {actualUser}) => {
@@ -112,9 +161,22 @@ export const resolvers = {
 
       // Get all existing companies and add them to the new investor
       let err, companies
-      [err, companies] = await to(Companies.find({}))
 
+      [err, companies] = await to(Companies.find({}))
       if (err) return new Error('Error ocurred while retrieving companies!')
+
+      // All companies will be pending when investor is registered
+      let companiesWithStatus = []
+
+      companies.map((company) => {
+        company.id = company._id
+
+        companiesWithStatus.push({
+          status: "Waiting Decision",
+          key: "WAITING",
+          company: company
+        })
+      })
 
       // Register a new INVESTOR
       const newUser = new Users({
@@ -122,7 +184,7 @@ export const resolvers = {
         email: input.email,
         password: input.password,
         role: "INVESTOR",
-        possible_invest: companies
+        possible_invest: companiesWithStatus
       })
 
       let savedUser
@@ -168,8 +230,12 @@ export const resolvers = {
       if (err) throw new Error('Error ocurred while retrieving users')
 
       investors.map((investor) => {
-        investor.possible_invest.push(newCompany)
-        // We don't need to wait
+        investor.possible_invest.push({
+          status: "Waiting Decision",
+          key: "WAITING",
+          company: newCompany
+        })
+
         investor.save()
       })
 
@@ -182,8 +248,40 @@ export const resolvers = {
       return savedCompany
     },
     deleteCompany: async(root, {id}) => {
-      const err = await Companies.findOneAndDelete({id: id})
-      if (err) throw new Error('Error deleting company')
+      const deleted = await Companies.findOneAndDelete({_id: id})
+      if (!deleted) throw new Error('Error deleting company')
+
+      // TODO: Search that company in users schema
+
+      return true
+    },
+    passCompanyToFirstMeeting: async(root, {id}, {actualUser}) => {
+      if (!actualUser || actualUser.role !== "INVESTOR") {
+        throw new Error("You're not allowed to see this resource")
+      }
+      const phase = {
+        key: "FIRST_MEETING",
+        status: "First Meeting"
+      }
+      const saved = await passCompanyToPhase(actualUser.id, id, phase)
+
+      // Not found
+      if (!saved) throw new Error("No company has been found")
+
+      return true
+    },
+    passCompanyToDiscarded: async(root, {id}, {actualUser}) => {
+      if (!actualUser || actualUser.role !== "INVESTOR") {
+        throw new Error("You're not allowed to see this resource")
+      }
+      const phase = {
+        key: "DISCARDED",
+        status: "Discarded after Screening"
+      }
+      const saved = await passCompanyToPhase(actualUser.id, id, phase)
+
+      // Not found
+      if (!saved) throw new Error("No company has been found")
 
       return true
     }

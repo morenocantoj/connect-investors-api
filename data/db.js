@@ -9,6 +9,17 @@ mongoose.Promise = global.Promise
 mongoose.connect(String(process.env.DATABASE_URL), {useNewUrlParser: true})
 mongoose.set('setAndModify', false)
 
+// Company Schema
+const companySchema = new mongoose.Schema({
+  name: String,
+  url: String,
+  ceo_name: String,
+  email: String,
+  telephone: String
+})
+
+const Companies = new mongoose.model('companies', companySchema)
+
 // Criteria Schema
 const criteriaSchema = new mongoose.Schema({
   text: String,
@@ -19,12 +30,18 @@ const criteriaSchema = new mongoose.Schema({
 const Criterias = mongoose.model('criterias', criteriaSchema)
 
 // User Schema
+const possibleInvestSchema = new mongoose.Schema({
+  status: String,
+  key: String,
+  company: companySchema
+})
+
 const userSchema = new mongoose.Schema({
   name: String,
   email: String,
   password: String,
   role: String,
-  possible_invest: Array
+  possible_invest: [possibleInvestSchema]
 })
 
 // Middleware to hash passwords before save them
@@ -46,16 +63,5 @@ userSchema.pre('save', function(next) {
 })
 
 const Users = mongoose.model('users', userSchema)
-
-// Company Schema
-const companySchema = new mongoose.Schema({
-  name: String,
-  url: String,
-  ceo_name: String,
-  email: String,
-  telephone: String
-})
-
-const Companies = new mongoose.model('companies', companySchema)
 
 export { Criterias, Users, Companies }

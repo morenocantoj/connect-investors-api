@@ -33,6 +33,11 @@ function chk_a(err) {
 
 // Token to use it in the tests
 let tokenAdmin
+let tokenUser
+
+const nameInverstor = faker.name.findName()
+const emailInverstor = "investor@investor.com"
+const passwordInverstor = "investor"
 
 describe("Foundernest API test suite", () => {
   before(() => {
@@ -87,6 +92,29 @@ describe("Foundernest API test suite", () => {
       assert(createdRyan.role, ryan.role)
     })
     it('Mutation to login an existing user', (done) => {
+      supertest(app)
+      .post(graphql_url)
+      .send({
+        query:
+          `mutation authenticateUser($email: String!, $password: String!) {
+              authenticateUser(email: $email, password: $password) {
+                token
+              }
+            }`,
+        variables: {
+          "email": "private.ryan@example.com",
+          "password": "plainexample"
+        }
+      })
+      .set('Content-Type', 'application/json')
+      .expect(200)
+      .end((err, resp) => {
+        chk(err, done)
+        assert.notEqual(resp.body.data.authenticateUser.token, undefined)
+        done()
+      })
+    })
+    it('Mutation to login an existing user (INVESTOR)', (done) => {
       supertest(app)
       .post(graphql_url)
       .send({
@@ -189,44 +217,61 @@ describe("Foundernest API test suite", () => {
         done()
       })
     })
-    it("Mutation to register as a new INVERSOR", (done) => {
-      const name = faker.name.findName()
-      const email = faker.internet.email()
-      const password = faker.internet.password()
+    it("Mutation to register as a new INVERSTOR and GET his token", () => {
 
-      supertest(app)
-      .post(graphql_url)
-      .send({
-        query:
-          `mutation registerInvestor($input: UserInput) {
-            registerInvestor(input: $input) {
-              id
-              name
-              email
-              role
-              possible_invest {
-                name
-                ceo_name
-              }
-            }
-          }`,
-        variables: {
-          "input": {
-            "name": name,
-            "email": email,
-            "password": password,
-            "role": "INVESTOR"
-          }
-        }
+      // A company is needed
+      const newCompany = new Companies({
+        name: faker.company.companyName(),
+        ceo_name: faker.name.findName(),
+        url: faker.internet.url(),
+        email: faker.internet.email(),
+        telephone: faker.phone.phoneNumberFormat()
       })
-      .set('Content-Type', 'application/json')
-      .end((err, resp) => {
-        chk(err, done)
-        assert.equal(resp.body.data.registerInvestor.name, name)
-        assert.equal(resp.body.data.registerInvestor.email, email)
-        assert.equal(resp.body.data.registerInvestor.role, "INVESTOR")
-        assert.notEqual(resp.body.data.registerInvestor.possible_invest, undefined)
-        done()
+      newCompany.id = newCompany._id
+
+      return new Promise((resolve) => {
+        resolve(newCompany.save())
+
+      }).then(() => {
+        supertest(app)
+        .post(graphql_url)
+        .send({
+          query:
+            `mutation registerInvestor($input: UserInput) {
+              registerInvestor(input: $input) {
+                id
+                name
+                email
+                role
+                possible_invest {
+                  status
+                  key
+                  company {
+                    name
+                    ceo_name
+                  }
+                }
+              }
+            }`,
+          variables: {
+            "input": {
+              "name": nameInverstor,
+              "email": emailInverstor,
+              "password": passwordInverstor,
+              "role": "INVESTOR"
+            }
+          }
+        })
+        .set('Content-Type', 'application/json')
+        .end((err, resp) => {
+          chk_a(err)
+          assert.equal(resp.body.data.registerInvestor.name, nameInverstor)
+          assert.equal(resp.body.data.registerInvestor.email, emailInverstor)
+          assert.equal(resp.body.data.registerInvestor.role, "INVESTOR")
+          assert.equal(resp.body.data.registerInvestor.possible_invest[0].status, "Waiting Decision")
+          assert.equal(resp.body.data.registerInvestor.possible_invest[0].key, "WAITING")
+          assert.notEqual(resp.body.data.registerInvestor.possible_invest[0].company, undefined)
+        })
       })
     })
   })
@@ -592,12 +637,60 @@ describe("Foundernest API test suite", () => {
 
         }).then((investors) => {
           investors.map((investor) => {
-            assert(investor.possible_invest[investor.possible_invest.length - 1].name, "Zapdos")
-            assert(investor.possible_invest[investor.possible_invest.length - 1].ceo_name, "Basilio Contreras")
-            assert(investor.possible_invest[investor.possible_invest.length - 1].url, "www.zapdos.com")
-            assert(investor.possible_invest[investor.possible_invest.length - 1].email, "zapdos@startup.com")
-            assert(investor.possible_invest[investor.possible_invest.length - 1].telephone, "+34 744 444 222")
+            assert.equal(investor.possible_invest[investor.possible_invest.length - 1].company.name, "Zapdos")
+            assert.equal(investor.possible_invest[investor.possible_invest.length - 1].company.ceo_name, "Basilio Contreras")
+            done()
           })
+        })
+      })
+    })
+    it("Get all companies from one investor", (done) => {
+      // Get an investor token
+      supertest(app)
+      .post(graphql_url)
+      .send({
+        query:
+          `mutation authenticateUser($email: String!, $password: String!) {
+              authenticateUser(email: $email, password: $password) {
+                token
+              }
+            }`,
+        variables: {
+          "email": emailInverstor,
+          "password": passwordInverstor
+        }
+      })
+      .set('Content-Type', 'application/json')
+      .end((err, resp) => {
+        chk_a(err)
+        assert.notEqual(resp.body.data.authenticateUser.token, undefined)
+        let tokenUser = resp.body.data.authenticateUser.token
+
+        supertest(app)
+        .post(graphql_url)
+        .send({
+          query:
+            `query getCompaniesFromInvestor($limit: Int, $offset: Int){
+              getCompaniesFromInvestor(limit: $limit, offset: $offset) {
+                status
+                key
+                company {
+                  id
+                  ceo_name
+                  url
+                }
+              }
+            }`,
+          variables: {
+            "limit": 4,
+            "offset": 0
+          }
+        })
+        .set("Content-Type", "application/json")
+        .set("Authorization", "Bearer " + tokenUser)
+        .end((err, resp) => {
+          chk(err, done)
+          assert.notEqual(resp.body.data.getCompaniesFromInvestor.length, 0)
           done()
         })
       })
