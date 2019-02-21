@@ -76,4 +76,5 @@ type Mutation {
   # Company mutations
   createCompany(input: CompanyInput): Company
   deleteCompany(id: ID!): Boolean
+  passCompanyToFirstMeeting(id: ID!): Boolean
 }
