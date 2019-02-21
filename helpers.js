@@ -79,3 +79,23 @@ export const answerUserCompanyCriteria = (user, inputData) => {
 
   return answer
 }
+
+export const getUserCompanyCriterias = (user, id, typeCriteria) => {
+  let allAnswers = []
+
+  user.possible_invest.forEach((statusCompany) => {
+    if (statusCompany.company._id == id) {
+      allAnswers = statusCompany.answers
+      return
+    }
+  })
+
+  if (!allAnswers) throw new Error(`Unable to find company ${id}`)
+
+  // Filter criterias by its type
+  const filteredAnswers = allAnswers.filter((item) => {
+    return item.type == typeCriteria
+  })
+
+  return filteredAnswers
+}

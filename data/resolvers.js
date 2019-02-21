@@ -1,5 +1,7 @@
 import { Criterias, Users, Companies } from './db'
-import { checkUserInDatabase, passCompanyToPhase, addSelectedCriteriaToUser, answerUserCompanyCriteria } from '../helpers'
+import { checkUserInDatabase, passCompanyToPhase,
+  addSelectedCriteriaToUser, answerUserCompanyCriteria,
+  getUserCompanyCriterias } from '../helpers'
 import to from 'await-to-js'
 import bcrypt from 'bcrypt'
 import mongoose from 'mongoose'
@@ -118,20 +120,22 @@ export const resolvers = {
       if (err) throw new Error("Error retrieving user from database")
 
       // Select the specified company
-      let allAnswers = []
+      const filteredAnswers = getUserCompanyCriterias(user, id, "MUST")
 
-      user.possible_invest.forEach((statusCompany) => {
-        if (statusCompany.company._id == id) {
-          allAnswers = statusCompany.answers
-          return
-        }
-      })
+      return filteredAnswers
+    },
+    getCompanySuperNiceHaves: async (root, {id}, {actualUser}) => {
+      if (!actualUser || actualUser.role !== "INVESTOR") {
+        throw new Error("You're not allowed to see this resource")
+      }
 
-      if (!allAnswers) throw new Error(`Unable to find company ${id}`)
+      let err, user
 
-      const filteredAnswers = allAnswers.filter((item) => {
-        return item.type == "MUST"
-      })
+      [err, user] = await to(Users.findById(actualUser.id).lean())
+      if (err) throw new Error("Error retrieving user from database")
+
+      // Select the specified company
+      const filteredAnswers = getUserCompanyCriterias(user, id, "SUPER_NICE")
 
       return filteredAnswers
     }
