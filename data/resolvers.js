@@ -109,7 +109,7 @@ export const resolvers = {
 
       return company
     },
-    getCompanyMustHaves: async (root, {id}, {actualUser}) => {
+    getUserCompanyCriteriasByType: async (root, {id, type}, {actualUser}) => {
       if (!actualUser || actualUser.role !== "INVESTOR") {
         throw new Error("You're not allowed to see this resource")
       }
@@ -120,22 +120,7 @@ export const resolvers = {
       if (err) throw new Error("Error retrieving user from database")
 
       // Select the specified company
-      const filteredAnswers = getUserCompanyCriterias(user, id, "MUST")
-
-      return filteredAnswers
-    },
-    getCompanySuperNiceHaves: async (root, {id}, {actualUser}) => {
-      if (!actualUser || actualUser.role !== "INVESTOR") {
-        throw new Error("You're not allowed to see this resource")
-      }
-
-      let err, user
-
-      [err, user] = await to(Users.findById(actualUser.id).lean())
-      if (err) throw new Error("Error retrieving user from database")
-
-      // Select the specified company
-      const filteredAnswers = getUserCompanyCriterias(user, id, "SUPER_NICE")
+      const filteredAnswers = getUserCompanyCriterias(user, id, type)
 
       return filteredAnswers
     }
