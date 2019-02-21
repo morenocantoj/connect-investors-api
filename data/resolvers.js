@@ -1,5 +1,7 @@
 import { Criterias, Users, Companies } from './db'
-import { checkUserInDatabase, passCompanyToPhase, addSelectedCriteriaToUser, answerUserCompanyCriteria } from '../helpers'
+import { checkUserInDatabase, passCompanyToPhase,
+  addSelectedCriteriaToUser, answerUserCompanyCriteria,
+  getUserCompanyCriterias, statsUserCompanyCriterias } from '../helpers'
 import to from 'await-to-js'
 import bcrypt from 'bcrypt'
 import mongoose from 'mongoose'
@@ -106,6 +108,36 @@ export const resolvers = {
       if (err) throw new Error("Error retrieving the company!")
 
       return company
+    },
+    getUserCompanyCriteriasByType: async (root, {id, type}, {actualUser}) => {
+      if (!actualUser || actualUser.role !== "INVESTOR") {
+        throw new Error("You're not allowed to see this resource")
+      }
+
+      let err, user
+
+      [err, user] = await to(Users.findById(actualUser.id).lean())
+      if (err) throw new Error("Error retrieving user from database")
+
+      // Select the specified company and type
+      const filteredAnswers = getUserCompanyCriterias(user, id, type)
+
+      return filteredAnswers
+    },
+    statsUserCompanyCriteriasByType: async (root, {id, type}, {actualUser}) => {
+      if (!actualUser || actualUser.role !== "INVESTOR") {
+        throw new Error("You're not allowed to see this resource")
+      }
+
+      let err, user
+
+      [err, user] = await to(Users.findById(actualUser.id).lean())
+      if (err) throw new Error("Error retrieving user from database")
+
+      // Select the specified company and type
+      const stats = statsUserCompanyCriterias(user, id, type)
+
+      return stats
     }
   },
 
@@ -239,7 +271,7 @@ export const resolvers = {
             text: criteria.text,
             key: criteria.key,
             type: type,
-            answer: "?"
+            answer: "DN"
           }
 
           // Apply changes to user
@@ -247,7 +279,6 @@ export const resolvers = {
           if (criteriaSet) return selectedCriteria
         })
         .catch((err) => {
-          console.log(err)
           throw new Error('Error retrieving data from database')
         })
     },
@@ -262,7 +293,7 @@ export const resolvers = {
       if (err) throw new Error("Error retrieving user from database")
 
       answerResponse = answerUserCompanyCriteria(user, {id, key, answer})
-      
+
       return answerResponse
     },
     createCompany: async(root, {input}) => {

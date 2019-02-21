@@ -38,6 +38,12 @@ type CompanyStatus {
   company: Company
   answers: [CriteriaAnswer]
 }
+type AnswersStats {
+  answered_y: Int,
+  answered_n: Int,
+  answered_dn: Int,
+  total: Int,
+}
 type Token {
   token: String
 }
@@ -64,6 +70,8 @@ type Query {
   # User queries
   obtainUser: User
   getCompaniesFromInvestor(limit: Int, offset: Int, key: String): [CompanyStatus]
+  getUserCompanyCriteriasByType(id: ID!, type: TypeCriteria!): [CriteriaAnswer]
+  statsUserCompanyCriteriasByType(id: ID!, type: TypeCriteria): AnswersStats
   # Company queries
   getCompanies(limit: Int, offset: Int): [Company]
   getCompany(id: ID!): Company

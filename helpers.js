@@ -79,3 +79,64 @@ export const answerUserCompanyCriteria = (user, inputData) => {
 
   return answer
 }
+
+export const getUserCompanyCriterias = (user, id, typeCriteria) => {
+  let allAnswers = []
+
+  user.possible_invest.forEach((statusCompany) => {
+    if (statusCompany.company._id == id) {
+      allAnswers = statusCompany.answers
+      return
+    }
+  })
+
+  if (!allAnswers) throw new Error(`Unable to find company ${id}`)
+
+  // Filter criterias by its type
+  const filteredAnswers = allAnswers.filter((item) => {
+    return item.type == typeCriteria
+  })
+
+  return filteredAnswers
+}
+
+export const statsUserCompanyCriterias = (user, id, typeCriteria) => {
+  let allAnswers = []
+
+  user.possible_invest.forEach((statusCompany) => {
+    if (statusCompany.company._id == id) {
+      allAnswers = statusCompany.answers
+      return
+    }
+  })
+
+  if (!allAnswers) throw new Error(`Unable to find company ${id}`)
+
+  // Filter criterias by its type
+  const filteredAnswers = allAnswers.filter((item) => {
+    return item.type == typeCriteria
+  })
+
+  // Get stats of answers
+  let countAgree = 0, countNo = 0, countDontKnow = 0
+  filteredAnswers.forEach((item) => {
+    switch (item.answer) {
+      case "Y":
+        countAgree = countAgree + 1
+        break
+      case "N":
+        countNo = countNo + 1
+        break
+      case "DN":
+        countDontKnow = countDontKnow + 1
+        break
+    }
+  })
+
+  return {
+    answered_y: countAgree,
+    answered_n: countNo,
+    answered_dn: countDontKnow,
+    total: filteredAnswers.length
+  }
+}
