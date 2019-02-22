@@ -15,6 +15,7 @@ const app = express()
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  introspection: true,
   context: async({req}) => {
     const bearerHeader = req.headers["authorization"];
 
@@ -36,7 +37,7 @@ const server = new ApolloServer({
     }
   }
 })
-const port = 4000
+const port = process.env.PORT || 4000
 
 server.applyMiddleware({app})
 
