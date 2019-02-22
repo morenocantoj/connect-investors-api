@@ -15,6 +15,7 @@ const app = express()
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  playground: false,
   introspection: true,
   context: async({req}) => {
     const bearerHeader = req.headers["authorization"];

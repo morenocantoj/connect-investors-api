@@ -4,12 +4,16 @@ type Criteria {
   key: String
   icon: String
 }
+""" User definition """
 type User {
-  id: ID
-  name: String
-  email: String
-  role: UserRole
-  possible_invest: [CompanyStatus]
+  id: ID,
+  name: String,
+  """ Unique """
+  email: String,
+  role: UserRole,
+  """ Companies that could match to user """
+  possible_invest: [CompanyStatus],
+  """ List of criterias selected by user """
   criterias: [CriteriaSelected]
 }
 type CriteriaAnswer {
@@ -57,59 +61,90 @@ enum TypeCriteria {
   NICE
 }
 enum AnswerCriteria {
-  Y # Yes
-  N # No
-  DN # ?
+  """ Yes """
+  Y,
+  """ No """
+  N,
+  """ ? (not answered) """
+  DN
 }
 type Query {
   # Hello World Query in GraphQL
-  helloGraphQL: String
+  """ A simple hello world to check API is working """
+  helloGraphQL: String,
   # Criteria queries
-  """ Get criterias """
-  getCriterias(limit: Int, offset: Int): [Criteria]
+  """ Get criterias paginated with limit and offset """
+  getCriterias(limit: Int, offset: Int): [Criteria],
   # User queries
-  obtainUser: User
-  getCompaniesFromInvestor(limit: Int, offset: Int, key: String): [CompanyStatus]
-  getUserCompanyCriteriasByType(id: ID!, type: TypeCriteria!): [CriteriaAnswer]
-  statsUserCompanyCriteriasByType(id: ID!, type: TypeCriteria): AnswersStats
+  """ Obtain the user given a token (HTTP Header) """
+  obtainUser: User,
+  """ Gets all the companies of a investor user, filtered by status key (key) and paginated (limit, offset) """
+  getCompaniesFromInvestor(limit: Int, offset: Int, key: String): [CompanyStatus],
+  """ Gets all company (id) criterias from an investor user filtered by its type """
+  getUserCompanyCriteriasByType(id: ID!, type: TypeCriteria!): [CriteriaAnswer],
+  """ Gets all company (id) criterias stats from an investor user filtered by its type """
+  statsUserCompanyCriteriasByType(id: ID!, type: TypeCriteria): AnswersStats,
   # Company queries
-  getCompanies(limit: Int, offset: Int): [Company]
-  getCompany(id: ID!): Company
+  """ Gets all companies stored in Companies collection """
+  getCompanies(limit: Int, offset: Int): [Company],
+  """ Gets a single company (id) """
+  getCompany(id: ID!): Company,
 }
 input CriteriaInput {
-  id: ID
-  text: String!
-  key: String!
+  id: ID,
+  """ Display name """
+  text: String!,
+  """ Key to filter the criteria """
+  key: String!,
+  """ Icon used in the front(L) """
   icon: String
 }
 input UserInput {
-  id: ID
-  name: String!
-  email: String!
-  password: String!
+  id: ID,
+  """ User's name """
+  name: String!,
+  """ User's email (must be unique) """
+  email: String!,
+  """ User's password (don't worry, is going to be hashed) """
+  password: String!,
+  """ User's role """
   role: UserRole
 }
 input CompanyInput {
-  id: ID
-  name: String!
-  ceo_name: String!
-  url: String!
-  email: String!
+  id: ID,
+  """ Company's name """
+  name: String!,
+  """ CEO's name """,
+  ceo_name: String!,
+  """ Company's website """
+  url: String!,
+  """ Company's contact email """
+  email: String!,
+  """ Company's contact telephone (with or without prefix) """
   telephone: String!
 }
 type Mutation {
   # Criteria mutations
   """ Create a new criteria """
-  createCriteria(input: CriteriaInput): Criteria
+  createCriteria(input: CriteriaInput): Criteria,
   # User mutations
-  createUserAdmin(input: UserInput): User
-  registerInvestor(input: UserInput): User
-  authenticateUser(email: String!, password: String!): Token
-  addCriteriaToUser(id: ID!, type: TypeCriteria!): CriteriaSelected
-  answerUserCriteria(id: ID!, key: String!, answer: AnswerCriteria!): CriteriaAnswer
+  """ Create an user with (only admin) """
+  createUserAdmin(input: UserInput): User,
+  """ Create a new user of type INVESTOR """
+  registerInvestor(input: UserInput): User,
+  """ Authenticates an user and returns a JSON-Web token """
+  authenticateUser(email: String!, password: String!): Token,
+  """ Add a Criteria (identified by id) to an user's selected (token) criterias array """
+  addCriteriaToUser(id: ID!, type: TypeCriteria!): CriteriaSelected,
+  """ Answer a criteria (key) of one company (id) from one user (token)"""
+  answerUserCriteria(id: ID!, key: String!, answer: AnswerCriteria!): CriteriaAnswer,
   # Company mutations
-  createCompany(input: CompanyInput): Company
-  deleteCompany(id: ID!): Boolean
-  passCompanyToFirstMeeting(id: ID!): Boolean
-  passCompanyToDiscarded(id: ID!): Boolean
+  """ Creates a new Company and makes a copy of it in all investor users """
+  createCompany(input: CompanyInput): Company,
+  """ Deletes a Company from collection """
+  deleteCompany(id: ID!): Boolean,
+  """ Passes the selected Company (id) from one investor user (token) to first meeting status """
+  passCompanyToFirstMeeting(id: ID!): Boolean,
+  """ Passes the selected Company (id) from one investor user (token) to discarded status """
+  passCompanyToDiscarded(id: ID!): Boolean,
 }
