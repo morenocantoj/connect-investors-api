@@ -100,16 +100,25 @@ input CompanyInput {
 type Mutation {
   # Criteria mutations
   """ Create a new criteria """
-  createCriteria(input: CriteriaInput): Criteria
+  createCriteria(input: CriteriaInput): Criteria,
   # User mutations
-  createUserAdmin(input: UserInput): User
-  registerInvestor(input: UserInput): User
-  authenticateUser(email: String!, password: String!): Token
-  addCriteriaToUser(id: ID!, type: TypeCriteria!): CriteriaSelected
-  answerUserCriteria(id: ID!, key: String!, answer: AnswerCriteria!): CriteriaAnswer
+  """ Create an user with (only admin) """
+  createUserAdmin(input: UserInput): User,
+  """ Create a new user of type INVESTOR """
+  registerInvestor(input: UserInput): User,
+  """ Authenticates an user and returns a JSON-Web token """
+  authenticateUser(email: String!, password: String!): Token,
+  """ Add a Criteria (identified by id) to an user's selected (token) criterias array """
+  addCriteriaToUser(id: ID!, type: TypeCriteria!): CriteriaSelected,
+  """ Answer a criteria (key) of one company (id) from one user (token)"""
+  answerUserCriteria(id: ID!, key: String!, answer: AnswerCriteria!): CriteriaAnswer,
   # Company mutations
-  createCompany(input: CompanyInput): Company
-  deleteCompany(id: ID!): Boolean
-  passCompanyToFirstMeeting(id: ID!): Boolean
-  passCompanyToDiscarded(id: ID!): Boolean
+  """ Creates a new Company and makes a copy of it in all investor users """
+  createCompany(input: CompanyInput): Company,
+  """ Deletes a Company from collection """
+  deleteCompany(id: ID!): Boolean,
+  """ Passes the selected Company (id) from one investor user (token) to first meeting status """
+  passCompanyToFirstMeeting(id: ID!): Boolean,
+  """ Passes the selected Company (id) from one investor user (token) to discarded status """
+  passCompanyToDiscarded(id: ID!): Boolean,
 }
